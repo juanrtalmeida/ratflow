@@ -1,0 +1,203 @@
+/* Página, não modal: ocupa a tela inteira, opaca, sem overlay translúcido e
+   sem "clique fora fecha". O editor continua montado por trás. */
+.manual-page {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--bg);
+  display: flex;
+  justify-content: center;
+}
+
+.manual-shell {
+  /* Largura de leitura no centro, mas altura cheia — é uma página. */
+  width: min(1080px, 100%);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.manual-header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+
+.manual-header h1 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--text-h);
+}
+
+.manual-voltar {
+  flex: none;
+  font-size: 13px;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.manual-voltar:hover {
+  text-decoration: underline;
+}
+
+.manual-corpo {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.manual-sumario {
+  flex: none;
+  width: 232px;
+  overflow-y: auto;
+  padding: 10px 8px 20px;
+  border-right: 1px solid var(--border);
+  background: var(--bg-panel);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.manual-sumario-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 9px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.manual-sumario-item:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.manual-sumario-item--ativa {
+  background: var(--bg);
+  color: var(--text-h);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+
+.manual-texto {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 4px 28px 60px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.manual-texto section {
+  /* Espaço para o cabeçalho não colar no topo quando o sumário rola até ele. */
+  padding-top: 24px;
+}
+
+.manual-texto h3 {
+  margin: 0 0 10px;
+  font-size: 17px;
+  color: var(--text-h);
+}
+
+.manual-texto p {
+  margin: 0 0 12px;
+}
+
+.manual-texto ul,
+.manual-texto ol {
+  margin: 0 0 12px;
+  padding-left: 22px;
+}
+
+.manual-texto li {
+  margin-bottom: 5px;
+}
+
+.manual-texto strong {
+  color: var(--text-h);
+}
+
+.manual-texto code {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  background: var(--code-bg);
+  border-radius: 3px;
+  padding: 1px 4px;
+  color: var(--text-h);
+}
+
+/* Tabela larga rola dentro de si mesma — a página nunca rola na horizontal. */
+.manual-tabela-rolagem {
+  overflow-x: auto;
+  margin: 0 0 14px;
+}
+
+.manual-texto table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+}
+
+.manual-texto th,
+.manual-texto td {
+  border: 1px solid var(--border);
+  padding: 6px 9px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.manual-texto th {
+  background: var(--bg-panel);
+  color: var(--text-h);
+  white-space: nowrap;
+}
+
+.manual-codigo {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  background: var(--code-bg);
+  border-radius: var(--radius-sm);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.5;
+  overflow-x: auto;
+  color: var(--text-h);
+}
+
+.manual-nota {
+  padding: 9px 12px;
+  border-left: 3px solid var(--warn);
+  background: var(--bg-panel);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: 13px;
+}
+
+@media (max-width: 720px) {
+  .manual-corpo {
+    flex-direction: column;
+  }
+
+  .manual-sumario {
+    width: auto;
+    flex-direction: row;
+    overflow-x: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 8px;
+  }
+
+  .manual-sumario-item {
+    white-space: nowrap;
+  }
+
+  .manual-texto {
+    padding: 4px 16px 40px;
+  }
+}

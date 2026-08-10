@@ -62,6 +62,12 @@ export interface ProtocolEdgeData extends Record<string, unknown> {
    * inexistente, então quem apaga precisa saber a diferença.
    */
   readonly segmentCount: number
+  /**
+   * Ordem deste auto-laço entre os do mesmo estado. Um estado com duas regras
+   * que acabam em `SX` desenharia duas curvas idênticas, uma escondendo a
+   * outra; o índice escalona a profundidade de cada uma.
+   */
+  readonly loopIndex: number
 }
 
 export interface ProtocolEdge {
@@ -115,13 +121,15 @@ function buildEdges(
   narrator: ReturnType<typeof createNarrator>,
 ): ProtocolEdge[] {
   const edges: ProtocolEdge[] = []
+  let loops = 0
 
   state.statements.forEach((statement, statementIndex) => {
     statement.segments.forEach((segment, segmentIndex) => {
       const target = segment.target
       if (!target || target.state === null) return
 
-      const toId = target.state === 'SX' ? String(state.index) : String(target.state)
+      const selfLoop = target.state === 'SX'
+      const toId = selfLoop ? String(state.index) : String(target.state)
       edges.push({
         id: `${state.index}:${statementIndex}:${segmentIndex}`,
         source: String(state.index),
@@ -129,12 +137,13 @@ function buildEdges(
         data: {
           label: edgeLabel(statement, segment, narrator),
           kind: triggerKind(statement),
-          selfLoop: target.state === 'SX',
+          selfLoop,
           arc: false,
           astTarget: target,
           stateIndex: state.index,
           statementIndex,
           segmentCount: statement.segments.length,
+          loopIndex: selfLoop ? loops++ : 0,
         },
       })
     })
@@ -148,7 +157,10 @@ function layoutWithDagre(
   edges: readonly { source: string; target: string; data: { selfLoop: boolean } }[],
 ): Map<string, { x: number; y: number }> {
   const g = new dagre.graphlib.Graph()
-  g.setGraph({ rankdir: 'LR', nodesep: 48, ranksep: 96 })
+  // Folga generosa entre nós: um auto-laço (`SX`) desce ~170px por fora do
+  // card, e num estado com duas regras `SX` o segundo desce mais ainda — com
+  // pouco `nodesep` esses laços invadiriam o card de baixo.
+  g.setGraph({ rankdir: 'LR', nodesep: 130, ranksep: 130 })
   g.setDefaultEdgeLabel(() => ({}))
 
   for (const node of nodes) g.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT })

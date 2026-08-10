@@ -60,6 +60,22 @@ describe('buildProtocolGraph', () => {
     expect(tempo.data.segmentCount).toBe(1)
   })
 
+  it('numera os auto-laços de um mesmo estado, para não desenharem um sobre o outro', () => {
+    // Duas regras que acabam em SX no mesmo estado: sem índice, as duas curvas
+    // sairiam idênticas e a segunda ficaria invisível.
+    const text =
+      'S.S.1,\nS1,\n  #START: ---> SX\n  30": ---> SX\n  #R^Alavanca: ---> S1\n'
+    const program = parseProgram(text)
+    const graph = buildProtocolGraph(program.stateSets[0]!, program)
+
+    const lacos = graph.edges.filter((e) => e.data.selfLoop)
+    expect(lacos.map((e) => e.data.loopIndex)).toEqual([0, 1])
+    // A transição que aponta para o próprio estado por número (`---> S1`) não é
+    // um auto-laço de "fica aqui" e não entra na contagem.
+    const porNumero = graph.edges.find((e) => !e.data.selfLoop)!
+    expect(porNumero.data.loopIndex).toBe(0)
+  })
+
   it('rotula a aresta do início da sessão', () => {
     const program = parseProgram(fr5.text)
     const graph = buildProtocolGraph(program.stateSets[0]!, program)

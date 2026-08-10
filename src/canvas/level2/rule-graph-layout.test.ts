@@ -3,7 +3,7 @@ import { createBuilder } from '../../graph/model.ts'
 import { decompileStatement } from '../../graph/decompile.ts'
 import { loadFixtures } from '../../core/__fixtures.ts'
 import { parseProgram } from '../../core/parser.ts'
-import { layoutRuleGraph } from './rule-graph-layout.ts'
+import { COL_WIDTH, layoutRuleGraph } from './rule-graph-layout.ts'
 
 const fr5 = loadFixtures().find((f) => f.name === 'fr5-sintetico.MPC')!
 
@@ -17,8 +17,8 @@ describe('layoutRuleGraph', () => {
 
     const layout = layoutRuleGraph(graph)
     expect(layout.positions.get('g')).toEqual({ x: 0, y: 0 })
-    expect(layout.positions.get('a')).toEqual({ x: 340, y: 0 })
-    expect(layout.positions.get('t')).toEqual({ x: 680, y: 0 })
+    expect(layout.positions.get('a')).toEqual({ x: COL_WIDTH, y: 0 })
+    expect(layout.positions.get('t')).toEqual({ x: COL_WIDTH * 2, y: 0 })
   })
 
   it('abre uma decisão em duas linhas, uma para cada ramo', () => {

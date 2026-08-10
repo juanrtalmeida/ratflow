@@ -15,12 +15,18 @@ export interface RuleLayout {
   readonly height: number
 }
 
-// Largo o bastante para a seta (e, numa decisão, os rótulos "sim"/"não" que
-// saem para a direita do card) não ficar espremida contra a coluna seguinte.
-const COL_WIDTH = 340
-// Alto o bastante para o nó de decisão (três campos empilhados) não colidir
-// com a linha vizinha — é o card mais alto que qualquer regra produz hoje.
-const ROW_HEIGHT = 220
+/**
+ * Largura de uma coluna. Um card do nível 2 tem ~220px, então o que sobra é o
+ * espaço onde a seta aparece — e é ele que faz o fluxo ser legível numa regra
+ * comprida (uma corrente de seis `SET` seguidos é rotina em arquivo real).
+ */
+export const COL_WIDTH = 400
+/**
+ * Altura de uma linha. Precisa caber o card mais alto que uma regra produz — o
+ * nó de decisão e o de "registrar no painel" têm três campos empilhados — mais
+ * a folga para a seta do ramo vizinho não passar rente ao card.
+ */
+export const ROW_HEIGHT = 300
 
 export function layoutRuleGraph(graph: RuleGraph): RuleLayout {
   const col = new Map<NodeId, number>()

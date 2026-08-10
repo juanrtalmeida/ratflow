@@ -8,6 +8,7 @@ import {
   type Connection,
   type Edge,
   type Node,
+  type NodeProps,
   type ReactFlowInstance,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
@@ -47,16 +48,31 @@ import { TargetNode, type TargetNodeType } from './TargetNode.tsx'
 import { TriggerNode, type TriggerNodeType } from './TriggerNode.tsx'
 import './LogicCanvas.css'
 
+/**
+ * Etiqueta de uma faixa: diz onde uma regra começa. Sem ela, duas regras
+ * grandes empilhadas viram um borrão só — e o número casa com a lista "O que
+ * cada regra faz", do painel ao lado.
+ */
+function FaixaLabel({ data }: NodeProps<FaixaNodeType>) {
+  return <div className="logic-canvas-faixa">{data.titulo}</div>
+}
+
+type FaixaNodeType = Node<{ titulo: string }, 'faixa'>
+
 const nodeTypes = {
   trigger: TriggerNode,
   action: ActionNode,
   decision: DecisionNode,
   target: TargetNode,
+  faixa: FaixaLabel,
 }
 
-type L2Node = TriggerNodeType | ActionNodeType | DecisionNodeType | TargetNodeType
+type L2Node = TriggerNodeType | ActionNodeType | DecisionNodeType | TargetNodeType | FaixaNodeType
 
-const RULE_GAP = 80
+/** Respiro entre duas regras — tem que ser maior que a folga entre linhas da mesma regra. */
+const RULE_GAP = 200
+/** Altura reservada para a etiqueta, acima do primeiro card da faixa. */
+const BAND_LABEL_HEIGHT = 46
 
 /** Chave da regra dentro do estado: o índice no texto, ou a regra ainda inexistente. */
 type Chave = number | 'nova'
@@ -228,6 +244,18 @@ export function LogicCanvas({
       }
 
       faixas.push({ chave, y0: yOffset })
+
+      nodes.push({
+        id: `faixa:${chave}`,
+        type: 'faixa',
+        position: { x: 0, y: yOffset - BAND_LABEL_HEIGHT },
+        data: {
+          titulo: chave === 'nova' ? 'Regra nova (ainda não salva)' : `Regra ${chave + 1}`,
+        },
+        draggable: false,
+        selectable: false,
+        deletable: false,
+      } as FaixaNodeType)
 
       // Todos os nós, não só os alcançáveis: um nó que o usuário acabou de
       // soltar e ainda não ligou existe no grafo e precisa aparecer para poder

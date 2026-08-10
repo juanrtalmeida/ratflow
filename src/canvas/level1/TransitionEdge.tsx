@@ -22,7 +22,15 @@ const KIND_STYLE: Record<
   raw: { stroke: 'var(--text-muted)', dash: '2 3' },
 }
 
-/** Um arco de "queda" fixa: sempre pertinho dos nós, nunca proporcional à distância. */
+/**
+ * Um arco de "queda" fixa: sempre pertinho dos nós, nunca proporcional à
+ * distância.
+ *
+ * O rótulo vai no ponto mais fundo da curva **de verdade**, que numa bezier
+ * cúbica com os dois controles na mesma altura fica a 3/4 do `dip`, não no
+ * `dip` inteiro — usar o valor cheio soltava a etiqueta no vazio, abaixo da
+ * linha que ela nomeia.
+ */
 function archPath(
   sourceX: number,
   sourceY: number,
@@ -31,11 +39,21 @@ function archPath(
   dip: number,
   spread: number,
 ): [path: string, labelX: number, labelY: number] {
-  const midY = Math.max(sourceY, targetY) + dip
+  const base = Math.max(sourceY, targetY)
   const path =
-    `M ${sourceX},${sourceY} C ${sourceX + spread},${midY} ${targetX - spread},${midY} ${targetX},${targetY}`
-  return [path, (sourceX + targetX) / 2, midY]
+    `M ${sourceX},${sourceY} C ${sourceX + spread},${base + dip} ${targetX - spread},${base + dip} ${targetX},${targetY}`
+  return [path, (sourceX + targetX) / 2, base + dip * 0.75]
 }
+
+/**
+ * Queda do auto-laço (`SX`, "fica aqui"). Tem que passar **por fora** do card,
+ * não por dentro: as duas pontas saem na altura do meio do nó, então uma queda
+ * pequena faz a curva atravessar o próprio bloco na volta. O card mede ~96px de
+ * base, mas cresce com o resumo e os selos de diagnóstico — daí a folga
+ * generosa, que é o que torna o laço visível como um laço.
+ */
+const SELF_LOOP_DIP = 170
+const SELF_LOOP_SPREAD = 96
 
 /**
  * O bezier padrão do React Flow escala a curvatura pela distância entre os
@@ -55,7 +73,19 @@ function edgePath(
   targetY: number,
   data: ProtocolEdgeData,
 ): [path: string, labelX: number, labelY: number] {
-  if (data.selfLoop) return archPath(sourceX, sourceY, targetX, targetY, 64, 36)
+  if (data.selfLoop) {
+    // Cada laço a mais no mesmo estado desce um degrau, senão o segundo ficaria
+    // escondido atrás do primeiro.
+    const degrau = data.loopIndex * 52
+    return archPath(
+      sourceX,
+      sourceY,
+      targetX,
+      targetY,
+      SELF_LOOP_DIP + degrau,
+      SELF_LOOP_SPREAD + degrau / 2,
+    )
+  }
   if (targetX < sourceX) return archPath(sourceX, sourceY, targetX, targetY, 88, 40)
   if (data.arc) return archPath(sourceX, sourceY, targetX, targetY, -88, 40)
 

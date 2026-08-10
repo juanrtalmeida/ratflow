@@ -15,6 +15,7 @@ export interface ActionsDrawerProps {
   readonly onExportPng: () => void
   readonly onExportSvg: () => void
   readonly onProtocolSheet: () => void
+  readonly onManual: () => void
   readonly onGlossary: () => void
   readonly onTour: () => void
 }
@@ -40,6 +41,7 @@ export function ActionsDrawer({
   onExportPng,
   onExportSvg,
   onProtocolSheet,
+  onManual,
   onGlossary,
   onTour,
 }: ActionsDrawerProps) {
@@ -121,6 +123,9 @@ export function ActionsDrawer({
 
         <section className="actions-drawer-secao">
           <h3>Ajuda</h3>
+          <button type="button" onClick={run(onManual)}>
+            📖 Manual — todas as funções
+          </button>
           <button type="button" onClick={run(onGlossary)}>
             ❓ Glossário
           </button>

@@ -38,6 +38,7 @@ import { suggestCounters } from '../vocab/counters.ts'
 import { profileFromSuggestions, suggestDevices } from '../vocab/profile.ts'
 import { ActionsDrawer } from './ActionsDrawer.tsx'
 import { Glossary } from './Glossary.tsx'
+import { irPara } from './rota.ts'
 import { OnboardingTour } from './OnboardingTour.tsx'
 import { ProtocolSheet } from './ProtocolSheet.tsx'
 import { SimulatorPanel } from './SimulatorPanel.tsx'
@@ -471,6 +472,7 @@ export function App() {
         onExportPng={handleExportPng}
         onExportSvg={handleExportSvg}
         onProtocolSheet={() => setShowProtocolSheet(true)}
+        onManual={() => irPara('manual')}
         onGlossary={() => {
           setGlossaryFocus(null)
           setShowGlossary(true)
@@ -575,6 +577,8 @@ export function App() {
       {showGlossary && (
         <Glossary focusId={glossaryFocus} onClose={() => setShowGlossary(false)} />
       )}
+
+
 
       {tourStep !== null && (
         <OnboardingTour step={tourStep} onAction={handleTourAction} onSkip={handleTourSkip} />

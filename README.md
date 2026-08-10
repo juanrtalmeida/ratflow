@@ -22,6 +22,9 @@ Nomes amigáveis não vivem num banco à parte: são gravados no próprio arquiv
 MedState (`^Constante` para dispositivos, `VAR_ALIAS` para contadores, comentários `\@nome:` para
 estados). O `.MPC` continua legível no Bloco de Notas.
 
+O próprio app traz um **manual completo** em ☰ → Ajuda → Manual: o que existe, como usar, os
+atalhos e os limites conhecidos. O conteúdo mora em `src/ui/manual-conteudo.ts`, como dados.
+
 ## Desenvolvimento
 
 ```bash
