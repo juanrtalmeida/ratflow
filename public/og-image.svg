@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#1a1330"/>
+  <circle cx="1050" cy="80" r="180" fill="#6d40d8" opacity="0.15"/>
+  <circle cx="120" cy="560" r="220" fill="#6d40d8" opacity="0.12"/>
+
+  <g transform="translate(160, 195)">
+    <circle cx="17" cy="17" r="20" fill="#6d40d8"/>
+    <circle cx="103" cy="17" r="20" fill="#6d40d8"/>
+    <circle cx="60" cy="60" r="46" fill="#6d40d8"/>
+    <circle cx="45" cy="52" r="6" fill="#f7f7f9"/>
+    <circle cx="75" cy="52" r="6" fill="#f7f7f9"/>
+  </g>
+
+  <text x="280" y="290" font-family="Segoe UI, Arial, sans-serif" font-size="72" font-weight="700" fill="#f7f7f9">RatFlow</text>
+  <text x="160" y="400" font-family="Segoe UI, Arial, sans-serif" font-size="30" fill="#c9c2e0">Editor visual de nós para programas</text>
+  <text x="160" y="440" font-family="Segoe UI, Arial, sans-serif" font-size="30" fill="#c9c2e0">MedState Notation (.MPC) do MED-PC</text>
+</svg>
