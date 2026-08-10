@@ -1,0 +1,257 @@
+\ PROGRAM TITLE: PROGRESSIVE RATIO
+\ PROGRAMMER: EVELYN FREIRE MELO (DIANA CORTÉS PATIÑO)
+\ LAB: LPCC UFPA
+\ BOXES: 1-4
+\ DATE CREATED: 21/11/2024
+
+\ THIS PROGRAM MAY BE USED TO TRAIN RATS TO SELF-ADMINISTER
+\ SOLUTIONS.  THE PROGRAM ARRANGES A FR SCHEDULE
+
+\******************************************************************************
+\ INPUTS
+
+^LEFTLEVER = 1 \ (ACTIVE)
+^RIGHTLEVER = 2 \ (ACTIVE)
+
+
+\******************************************************************************
+\ OUTPUTS
+
+^DIPPER = 4
+^HOUSELIGHT = 3
+^LEFTLEVERLIGHT = 1
+^RIGHTLEVERLIGHT = 2
+
+\******************************************************************************
+\ VARIABLES FOR MACRO
+
+DIM A = 11
+
+\ A(0) = CONDITION CONTROL
+\    1 = MAGAZINE TRAINING 
+\    2 = CRF TRAINING
+\ A(1) = DIPPER DURATION
+\    IN 100THS OF A SEC
+\ A(2) = SESSION TIME
+\    IN 100THS OF A SEC
+\ A(3) = VT MULTIPLIER
+\ A(5) = DIPPER DURATION
+\    IN 100THS OF A SEC
+\ A(7) = WEIGHT
+\    TO BE ENTERED IN DIALOG BOX PRIOR TO SESSION
+\ A(8) = MAX NUMBER OF REINFORCERS PER SESSION
+\ A(9) = LEVER SIDE
+\    0 = LEFT
+\    1 = RIGHT 
+\ A(11) = RATIO FOR REINFORCEMENT
+\******************************************************************************
+\ VARIABLES FOR PROGRAM
+
+DIM B = 19       
+
+\ B(0) = READY
+\ B(1) = SESSION TIME
+\ B(2) = REAL TIME
+\ B(3) = VT VALUE
+\ B(4) = VT DIPPERS
+\ B(5) = LEFTLEVER RESPONSES
+\ B(6) = LEFTLEVER RESPONSES DURING REINFORCEMENT
+\ B(7) = RIGHTLEVER RESPONSES
+\ B(8) = RIGHTLEVER RESPONSES DURING REINFORCEMENT
+\ B(9) = REINFORCERS LEFT
+\ B(10) = REINFORCERS RIGHT
+\ B(16) = INDEX FOR CUMULATIVE-RECORD ARRAY
+\ B(17) = INDEX FOR REAL-TIME ARRAY
+\ B(18) = DIPPER DURATION
+\ B(19) = SESSION FINISHED
+
+\******************************************************************************
+\ CUMULATIVE-RECORD (SESSION-TIME) ARRAY
+
+DIM C = 10000
+
+\ .1 = LEFT RESPONSES                                                        
+\ .11 = RIGHT RESPONSES
+\ .2 = LEFT REINFORCER DELIVERY
+\ .3 = RIGHT REINFORCER DELIVERY
+
+\******************************************************************************
+\ REAL-TIME ARRAY
+
+DIM D = 10000
+
+\ .1 = SESSION START
+\ .2 = LEFTLEVER RESPONSES
+\ .21 = LEFTLEVER RESPONSES DURING REINFORCEMENT
+\ .3 = RIGHTLEVER RESPONSES
+\ .31 = RIGHTLEVER RESONSES DURING REINFORCEMENT
+\ .4 = LEFT REINFORCER DELIVERY START
+\ .41 = LEFT REINFORCER DELIVERY END
+\ .5 = RIGHT REINFORCER DELIVERY START
+\ .51 = RIGHT REINFORCER DELIVERY END
+\ .6 = RIGHT REINFORCER DELIVERY START
+\ .61 = RIGHT REINFORCER DELIVERY END
+\ .9 = SESSION END
+
+\******************************************************************************
+\ FLAGS
+
+DIM F = 1
+
+\ F(0) = FLAG FOR REINFORCEMENT
+\    0 = NO REINFORCEMENT
+\    1 = REINFORCEMENT ON
+\
+\
+\******************************************************************************
+\ LISTS
+
+\ VT 1-S (LIST FOR MAGAZINE TRAINING AND VI TRAINING)
+
+LIST M = 0.052", 0.163", 0.288", 0.432", 0.599", 0.801", 1.053", 1.393", 1.916", 3.303"
+
+\******************************************************************************
+\ SHOWS
+                
+\ SHOW 1, READY, B(0)
+\ SHOW 1, VT, A(9)
+\ SHOW 2, DIPPERS VT, B(5)
+\ SHOW 2, RESPONSES_RIGHT, B(7)
+\ SHOW 3, REINFORCERS_LEFT, B(9)
+\ SHOW 3, REINFORCERS_RIGHT, B(10)
+\ SHOW 5, SESSIONTIME,B(1)
+
+\******************************************************************************
+
+\ BOX TEST
+
+S.S.1,
+S1,
+    .01":ON^HOUSELIGHT, ^LEFTLEVERLIGHT, ^RIGHTLEVERLIGHT ---> S2
+S2,
+    #R^LEFTLEVER: ON ^DIPPER ---> S3
+S3,
+    1": OFF ^DIPPER, ^LEFTLEVERLIGHT ---> S4
+
+S4,
+    #R^RIGHTLEVER: ON ^DIPPER ---> S6
+
+S6,
+    1": OFF ^DIPPER, ^RIGHTLEVERLIGHT, ^HOUSELIGHT; 
+     ADD B(0); SHOW 1, READY, B(0)---> S8
+
+S8,
+    1": ---> SX
+
+\******************************************************************************
+\ FIXED RATIO
+
+S.S.2,
+S1,
+    #START: IF A(0)<3  [@HERE, @ELSEWHERE]    \teria que ajeitar na MACRO qual alavanca é pra estar ativa                   
+        @HERE: IF B(0) = 1 [@BOXTESTED, @NOT]                    
+            @BOXTESTED: ON^HOUSELIGHT ---> S2
+            @NOT: ---> STOPKILL
+        @ELSEWHERE: ---> S11
+
+S2,
+    .01": IF A(9) = 1 [@LEFT, @RIGHT]
+        @LEFT: ---> S3
+        @RIGHT: ---> S7
+
+\\\\\\\LEFT LEVER\\\\\\\\\\\\\
+
+S3,
+    .01":  #START: ON^HOUSELIGHT, ^LEFTLEVERLIGHT ---> S4
+S4,
+    A(11)#R^LEFTLEVER: IF F(0) = 1 [@DURRINGREINFORCEMENT, @NOT]        \A(11) foi uma variável criada na MACRO para o Tamanho da Razão que será inserida na hora do INPUTT   
+                @DURINGREINFORCEMENT: ---> SX
+                @NOT: ---> S5
+S5,
+    .01": SET F(0) = 1;
+                OFF ^LEFTLEVERLIGHT;
+        ON ^DIPPER;
+        ADD B(9);
+        SHOW 5,LDIPPERS, B(9);
+        SET D(B(17)) = B(2) + .4; ADD B(17); SET D(B(17)) = -987.987;
+        SET C(B(16)) = B(1) + .2; ADD B(16); SET C(B(16)) = -987.987;
+        SET B(18) = A(5) ---> S6
+S6,
+    .01": IF B(18) > 0 [@MORE, @STOP]
+                @MORE: SUB B(18) ---> SX
+                @STOP: OFF ^DIPPER; SET F(0) = 0;
+                       SET D(B(17)) = B(2) + .41; ADD B(17); SET D(B(17)) = -987.987;
+                       IF B(9) < A(8) [@ANOTHER, @STOP]
+                            @ANOTHER: ---> S3
+                            @STOP: SET D(B(17)) = B(2) + .9; ADD B(17); SET D(B(17)) = -987.987 ---> STOPABORTFLUSH
+
+\\\\\\\RIGHT LEVER\\\\\\\\\
+
+S7,
+    .01":  ON ^RIGHTLEVERLIGHT ---> S8
+S8,
+    A(11)#R^RIGHTLEVER: IF F(0) = 1 [@DURRINGREINFORCEMENT, @NOT]
+                @DURINGREINFORCEMENT: ---> SX
+                @NOT:  ---> S9
+S9,
+    .01": SET F(0) = 1;
+                OFF ^RIGHTLEVERLIGHT;
+        ON ^DIPPER;                                             
+        ADD B(10);
+        SHOW 5, RDIPPERS, B(10);
+        SET D(B(17)) = B(2) + .5; ADD B(17); SET D(B(17)) = -987.987;
+        SET C(B(16)) = B(1) + .3; ADD B(16); SET C(B(16)) = -987.987;      \serve p/ retirar dados supérfluos
+                SET B(18) = A(5) ---> S10
+S10,
+    .01": IF B(18) > 0 [@MORE, @STOP]
+                @MORE: SUB B(18) ---> SX
+                @STOP: OFF ^DIPPER;
+        SET F(0) = 0;
+        SET D(B(17)) = B(2) + .51; ADD B(17); SET D(B(17)) = -987.987;
+        IF B(10) < A(8) [@ANOTHER, @STOP]
+            @ANOTHER: ---> S7
+            @STOP: SET D(B(17)) = B(2) + .9; ADD B(17); SET D(B(17)) = -987.987 ---> STOPABORTFLUSH
+          
+
+S11,
+    1": ---> SX
+
+\******************************************************************************
+\ RESPONSE COUNTER
+
+S.S.10,
+S1,
+    #START: ---> S2
+S2,
+    
+    #R^LEFTLEVER:IF F(0) = 1 [@DURINGREINFORCEMENT, @NOT]
+        @DURINGREINFORCEMENT:  ADD B(6);
+            SET D(B(17)) = B(2) + .21; ADD B(17); SET D(B(17)) = -987.987 ---> SX
+                                              
+        @NOT: ADD B(5); SHOW 3, LRESP, B(5); 
+            SET D(B(17)) = B(2) + .2; ADD B(17); SET D(B(17)) = -987.987;
+            SET C(B(16)) = B(1) + .1; ADD B(16); SET C(B(16)) = -987.987 ---> SX
+
+    #R^RIGHTLEVER:IF F(0) = 1 [@DURINGREINFORCEMENT, @NOT]
+        @DURINGREINFORCEMENT: ADD B(8);  
+            SET D(B(17)) = B(2) + .31; ADD B(17); SET D(B(17)) = -987.987 ---> SX
+        @NOT: ADD B(7); SHOW 4, RRESP, B(7);
+            SET D(B(17)) = B(2) + .3; ADD B(17); SET D(B(17)) = -987.987;
+            SET C(B(16)) = B(1) + .11; ADD B(16); SET C(B(16)) = -987.987 ---> SX
+    
+
+\******************************************************************************
+\ SESSION TIME
+S.S.12,
+S1,
+    #START: SET D(B(17)) = B(2) + .1; ADD B(17); SET D(B(17)) = -987.987 ---> S2    \assim que conta a hora?
+S2,
+    .01": ADD B(2);
+        IF F(0) = 1 [@REINFORCEMENT, @NOT]
+            @REINFORCEMENT: ---> SX          
+            @NOT: ADD B(1);                                
+                SHOW 6, SESSIONTIME, B(1)/6000;
+                IF B(1) < A(2) [@KEEPGOING, @STOP]
+                    @KEEPGOING: ---> SX
+                    @STOP: ADD B(19);SHOW 5, SESSION FINISHED, B(19);
+                                               SET D(B(17)) = B(2) + .9; ADD B(17); SET D(B(17)) = -987.987 ---> STOPABORTFLUSH

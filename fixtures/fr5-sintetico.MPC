@@ -1,0 +1,46 @@
+\ ==========================================================
+\ FR5 — Razão fixa 5
+\ Fixture SINTÉTICA, escrita para exercitar o parser.
+\ Substitua por arquivos reais do laboratório assim que possível.
+\ ==========================================================
+
+^Alavanca      = 1
+^Pelota        = 1
+^LuzCasa       = 4
+^Razao         = 5
+^DuracaoSessao = 60
+^Timeout       = 20
+
+VAR_ALIAS
+  Respostas = A
+  Reforcos  = B
+END
+
+DIM C = 2000
+LIST D = 1, 3, 5, 7, 9
+
+DISKVARS = A, B, C
+
+S.S.1, \@nome: Tarefa
+S1, \@nome: Início \@papel: espera \@pos: 40,140
+  #START: SET A = 0, B = 0; ON ^LuzCasa ---> S2
+
+S2, \@nome: Esperando resposta \@papel: espera \@pos: 360,140
+  #R^Alavanca: ADD A; SHOW 1, Respostas, A; IF A >= ^Razao [@Reforco, @Continua]
+       @Reforco: ON ^Pelota; ADD B; SET A = 0 ---> S3
+       @Continua: ---> SX
+  30": ---> S4
+
+S3, \@nome: Reforço \@papel: reforco \@pos: 680,140
+  0.05": OFF ^Pelota; SHOW 2, Reforcos, B ---> S4
+
+S4, \@nome: Intervalo \@papel: timeout \@pos: 1000,140
+  ^Timeout": ---> S2
+
+S.S.2, \@nome: Sessão
+S1, \@nome: Contando \@pos: 40,420
+  #START: ---> S2
+S2, \@nome: Aguardando fim \@pos: 360,420
+  ^DuracaoSessao': Z1 ---> S3
+S3, \@nome: Fim \@papel: fim \@pos: 680,420
+  #Z1: OFF ^LuzCasa ---> SX

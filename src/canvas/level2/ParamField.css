@@ -1,0 +1,40 @@
+.param-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+}
+
+.param-field-label {
+  color: var(--text-muted);
+}
+
+.param-field-input {
+  font: inherit;
+  font-size: 12px;
+  padding: 3px 5px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--bg);
+  color: var(--text);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.param-field-duracao-row {
+  display: flex;
+  gap: 4px;
+}
+
+.param-field-duracao-row .param-field-input:first-child {
+  /* Largura mínima para caber alguns dígitos — sem isso, o `<select>` de
+     unidade ao lado ("segundos"/"minutos") toma todo o espaço e o número
+     fica sem lugar nenhum para aparecer. */
+  flex: 1;
+  min-width: 56px;
+}
+
+.param-field-duracao-row select.param-field-input {
+  flex: 0 1 auto;
+  min-width: 0;
+}

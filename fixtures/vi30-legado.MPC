@@ -1,0 +1,30 @@
+\ VI30 no estilo legado: sem anotações do editor, nomes curtos,
+\ e construções que o catálogo ainda não modela (RANDD, listas).
+\ Fixture SINTÉTICA — serve para checar a degradação suave.
+
+^L = 1
+^P = 1
+^H = 4
+
+DIM K = 500
+LIST J = 15, 22, 30, 38, 45
+
+S.S.1,
+S1,
+  #START: SET A = 0; ON ^H; RANDD K = J ---> S2
+
+S2,
+  K": ---> S3
+  #R1: ADD A ---> SX
+
+S3,
+  #R1: ADD A; ADD B; ON ^P ---> S4
+
+S4,
+  0.05": OFF ^P; RANDD K = J ---> S2
+
+S.S.2,
+S1,
+  #START: ---> S2
+S2,
+  30': Z1 ---> SX

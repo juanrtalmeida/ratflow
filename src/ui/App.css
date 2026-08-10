@@ -1,0 +1,127 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.app-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
+  flex: none;
+}
+
+.app-bar-menu {
+  font-size: 16px;
+  line-height: 1;
+  padding: 5px 9px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.app-bar-menu:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.app-bar-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.app-bar-logo {
+  display: block;
+}
+
+.app-bar-wordmark {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: var(--text-h);
+}
+
+.app-bar-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding-left: 10px;
+  border-left: 1px solid var(--border);
+}
+
+.app-breadcrumb {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.app-breadcrumb-back {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.app-bar-toggle-code {
+  margin-left: auto;
+  font: inherit;
+  font-size: 12px;
+  font-family: var(--mono);
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--bg-canvas);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.app-bar-toggle-code:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.app-bar-toggle-code[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.app-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  background: var(--bg-canvas);
+}
+
+.app-canvas-area {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+}
+
+.app-code-area {
+  flex: none;
+  width: 45%;
+  min-width: 320px;
+  max-width: 720px;
+  border-left: 1px solid var(--border);
+}
+
+.app-code-area--escondida {
+  display: none;
+}
+
+.app-placeholder {
+  margin: auto;
+  color: var(--text-muted);
+  font-size: 14px;
+}

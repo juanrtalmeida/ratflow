@@ -1,0 +1,50 @@
+.code-editor {
+  height: 100%;
+  overflow: hidden;
+}
+
+.code-editor .cm-editor {
+  height: 100%;
+}
+
+.code-editor .cm-scroller {
+  font-family: var(--mono);
+  overflow: auto;
+}
+
+/* Popover de ajuda ao passar o mouse num comando (medstate-hover.ts). O
+   CodeMirror monta o tooltip fora de `.code-editor` (direto no body) dentro
+   de um wrapper `.cm-tooltip` que é quem carrega fundo/borda — a div que a
+   extensão devolve fica só por dentro dele, com a classe `cm-tooltip-section`
+   junto (por isso o seletor mira o wrapper, não `.cm-medstate-tooltip`
+   sozinho). Sobrescreve o tema claro fixo da biblioteca (ela não segue
+   `prefers-color-scheme`), daí o !important. Como este app só usa tooltip do
+   CodeMirror aqui, é seguro estilizar `.cm-tooltip` global. */
+.cm-tooltip {
+  max-width: 280px;
+  border-radius: var(--radius-sm);
+  background: var(--bg) !important;
+  border: 1px solid var(--border-strong) !important;
+  color: var(--text) !important;
+  box-shadow: var(--shadow);
+}
+
+.cm-medstate-tooltip {
+  padding: 8px 10px;
+  font-family: var(--sans);
+}
+
+.cm-medstate-tooltip strong {
+  display: block;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
+  margin-bottom: 3px;
+}
+
+.cm-medstate-tooltip p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text);
+}

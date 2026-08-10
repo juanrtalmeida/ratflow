@@ -1,0 +1,110 @@
+.process-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
+  padding: 8px 12px;
+  flex: none;
+}
+
+.process-tabs-row {
+  display: flex;
+  gap: 6px;
+}
+
+.process-tab {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  color: var(--text);
+}
+
+.process-tab:hover {
+  border-color: var(--border-strong);
+}
+
+.process-tab--active {
+  background: var(--bg);
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.process-tab-indice {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.process-tab-nome {
+  font-weight: 600;
+}
+
+.process-tab-conta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.process-tab--novo {
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 15px;
+  padding: 6px 12px;
+}
+
+.process-tab--novo:hover {
+  color: var(--accent);
+}
+
+.process-signals {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.process-signals-titulo {
+  font-weight: 600;
+  flex: none;
+}
+
+.process-signals-lista {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  padding: 0;
+}
+
+.process-signals-lista li {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.process-signals-numero {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.process-signals-vazio {
+  font-style: italic;
+}
+
+.process-signals-link {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+}

@@ -1,0 +1,132 @@
+.simulator-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  overflow-y: auto;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+.simulator-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.simulator-controls button,
+.simulator-controls select {
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-panel);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.simulator-controls button {
+  border: none;
+}
+
+.simulator-controls button:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.simulator-controls select {
+  border: 1px solid var(--border-strong);
+}
+
+.simulator-virtual-subject {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.simulator-tempo {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.simulator-panel h3 {
+  margin: 0 0 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.simulator-counters ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.simulator-vazio {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 12px;
+  margin: 0;
+}
+
+.simulator-timeline {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.simulator-timeline ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.simulator-evento {
+  display: flex;
+  gap: 6px;
+  font-size: 12px;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+}
+
+.simulator-evento-tempo {
+  font-family: var(--mono);
+  color: var(--text-muted);
+  flex: none;
+}
+
+.simulator-evento--transicao {
+  color: var(--role-wait);
+}
+.simulator-evento--porta {
+  color: var(--node-action);
+}
+.simulator-evento--sinal {
+  color: #c026d3;
+}
+.simulator-evento--aviso {
+  color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 10%, transparent);
+}
+
+.simulator-aviso-escopo {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}

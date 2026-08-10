@@ -1,0 +1,9 @@
+.protocol-canvas {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.protocol-canvas .react-flow__minimap {
+  border-radius: var(--radius);
+}

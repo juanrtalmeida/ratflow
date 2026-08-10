@@ -1,0 +1,488 @@
+\
+\ PROGRAM TITLE: REINFORCEMENT SENTIVITY PILOT
+\ PROGRAMMER: DIANA CORTES PATIÑO
+\ LAB: LPCC UFPA
+\ BOXES: BOTTOM 1-3
+\ DATE CREATED: 
+
+\ THIS PROGRAM USES A DYNAMIC SCHEDULE TO ASSESS CHOICE BEHAVIOR AND MATCHING. IT PRESENTS FIVE COMPONENTS SEPARATED BY A BLACK OUT. 
+\ ON EACH COMPONENT LEVER PRESSING RESPONSES ARE REINFORCED ACCORDING TO CONCURRENT SCHEDULE VI-VI.
+                                                           
+
+\******************************************************************************
+\ INPUTS
+
+^LEFTLEVER = 1 \ (ACTIVE)
+^RIGHTLEVER = 2 \ (ACTIVE)
+
+
+\******************************************************************************
+\ OUTPUTS
+
+^DIPPER = 4
+^HOUSELIGHT = 3
+^LEFTLEVERLIGHT = 1
+^RIGHTLEVERLIGHT = 2
+
+\******************************************************************************
+\ VARIABLES FOR MACRO
+
+DIM A = 16
+
+\ A(0) = CONDITION
+\    1 = MAGAZINE TRAINING
+\    2 = CRF TRAINING
+\    3 = DYNAMIC CONCURRENT VI-VI 
+\ A(3) = VT MULTIPLIER
+\ A(4) = MAX. REINFORCERS PER COMPONENT
+\ A(5) = DIPPER DURATION
+\    IN 100THS OF A SEC
+\ A(6) = SESSION TIME
+\    IN 100THS OF A SEC
+\ A(7) = WEIGHT
+\    TO BE ENTERED IN DIALOG BOX PRIOR TO SESSION
+\ A(8) = MAX NUMBER OF REINFORCERS PER SESSION
+\ A(10) = ICI DURATION
+\ A(11) = COMPONENTS PER SESSION
+\ A(12) = FIRST VI VALUE
+\ A(13) = SECOND VI VALUE
+\ A(14) = THIRD VI VALUE
+\ A(15) = FOURTH VI VALUE
+\ A(16) = FIFTH VI VALUE
+
+
+\******************************************************************************
+\ VARIABLES FOR PROGRAM
+
+DIM B = 46
+
+\ B(0) = READY
+\ B(1) = SESSION TIME
+\ B(2) = REAL TIME
+
+\ B(3) = CURRENT VI LEFT
+\ B(4) = VT OR VI VALUE LEFT
+\ B(5) = CURRENT VI RIGHT
+
+\ B(6) = REINFORCERS LEFT COMP 1
+\ B(7) = REINFORCERS LEFT COMP 2
+\ B(8) = REINFORCERS LEFT COMP 3
+\ B(9) = REINFORCERS LEFT COMP 4
+\ B(10) = REINFORCERS LEFT COMP 5
+
+
+\ B(11) = COMPONENT IN MULTIPLE SCHEDULE
+\ B(12) = VI VALUE RIGHT
+\ B(13) = TOTAL REINFORCERS PER COMPONENT
+\ B(14) = ICI TIME
+\ B(15) = CURRENT VI RIGHT
+
+\ B(16) = INDEX FOR CUMULATIVE-RECORD ARRAY
+\ B(17) = INDEX FOR REAL-TIME ARRAY
+
+\ B(18) = DIPPER DURATION
+\ B(19) = SESSION FINISHED
+
+\ B(20) = LEFT LEVER RESPONSES DURING REINFORCEMENT
+\ B(21) = RIGHT LEVERE RESPONSES DURING REINFORCEMENT
+\ B(22) = LEFT LEVER RESPONSES DURING ICI
+\ B(23) = RIGHT LEVER RESPONSES DURING ICI
+
+\ B(24) = DIPPER DURATION
+\ B(25) = SESSION FINISHED
+
+\ B(26) = LEFT LEVER RESPONSES COMPONENT 1
+\ B(27) = LEFT LEVER RESPONSES COMPONENT 2
+\ B(28) = LEFT LEVER RESPONSES COMPONENT 3
+\ B(29) = LEFT LEVER RESPONSES COMPONENT 4
+\ B(30) = LEFT LEVER RESPONSES COMPONENT 5
+
+\ B(31) = RIGHT LEVER RESPONSES COMPONENT 1
+\ B(32) = RIGHT LEVER RESPONSES COMPONENT 2
+\ B(33) = RIGHT LEVER RESPONSES COMPONENT 3
+\ B(34) = RIGHT LEVER RESPONSES COMPONENT 4
+\ B(35) = RIGHT LEVER RESPONSES COMPONENT 5
+
+\ B(36) = REINFORCERS RIGHT COMP 1
+\ B(37) = REINFORCERS RIGHT COMP 2
+\ B(38) = REINFORCERS RIGHT COMP 3
+\ B(39) = REINFORCERS RIGHT COMP 4
+\ B(40) = REINFORCERS RIGHT COMP 5
+
+\ B(41) = CLOCK COMP 1
+\ B(42) = CLOCK COMP 2
+\ B(43) = CLOCK COMP 3
+\ B(44) = CLOCK COMP 4
+\ B(45) = CLOCK COMP 5
+
+\ B(46) = MAX.NUMBER OF COMPONENTS
+
+\******************************************************************************
+\ CUMULATIVE-RECORD (SESSION-TIME) ARRAY
+
+DIM C = 10000
+
+\ .1 = LEFT RESPONSES COMPONENT 1
+\ .11 = LEFT REINFORCERS COMPONENT 1
+\ .2 = RIGHT RESPONSES COMPONENT 1
+\ .21 = RIGHT REINFORCER COMPONENT 1
+\ .3 = LEFT RESPONSES COMPONENT 2
+\ .31 = LEFT REINFORCERS COMPONENT 2
+\ .4 = RIGHT RESPONSES COMPONENT 2
+\ .41 = RIGHT REINFORCER DELIVERY COMPONENT 2
+\ .5 = LEFT RESPONSES COMPONENT 3
+\ .51 = LEFT REINFORCERS COMPONENT 3
+\ .6 = RIGHT RESPONSES COMPONENT 3
+\ .61 = REINFORCER DELIVERY COMPONENT 3
+\ .7 = LEFT RESPONSES COMPONENT 4
+\ .71 = LEFT REINFORCERS COMPONENT 4
+\ .8 = RIGHT RESPONSES COMPONENT 4
+\ .81 = REINFORCER DELIVERY COMPONENT 4
+\ .9 = LEFT RESPONSES COMPONENT 5
+\ .91 = LEFT REINFORCERS COMPONENT 5
+\ .12 = RIGHT RESPONSES COMPONENT 5
+\ .121 = REINFORCER DELIVERY COMPONENT 5
+
+\******************************************************************************
+\ REAL-TIME ARRAY
+
+DIM D = 10000
+
+\ .1 = SESSION START
+\ .2 = LEFTLEVER RESPONSES
+\ .21 = LEFTLEVER RESPONSES DURING REINFORCEMENT
+\ .3 = RIGHTLEVER RESPONSES
+\ .31 = RIGHTLEVER RESPONSES DURING REINFORCEMENT
+\ .4 = LEFT REINFORCER DELIVERY START
+\ .41 = LEFT REINFORCER DELIVERY END
+\ .5 = RIGHT REINFORCER DELIVERY START
+\ .51 = RIGHT REINFORCER DELIVERY END
+\ .61 = COMPONENT 1 START
+\ .62 = COMPONENT 2 START
+\ .63 = COMPONENT 3 START
+\ .64 = COMPONENT 4 START
+\ .65 = COMPONENT 5 START
+\ .66 = ICI START
+\ .7 = LEFT LEVER RESPONSES DURING ICI
+\ .8 = RIGHT LEVER RESPONSES DURING ICI
+\ .9 = SESSION END
+
+\******************************************************************************
+\ FLAGS
+
+DIM F = 3
+
+\ F(0) = FLAG FOR REINFORCEMENT
+\    0 = NO REINFORCEMENT
+\    1 = REINFORCEMENT ON
+\F (1) = FLAG FOR COMPONENT
+\    0 = COMPONENT
+\    1 = ICI
+\F (2) = FLAG FOR LEFT COD
+\    0 = NO COD
+\    1 = COD LEFT
+\F (3) = FLAG FOR RIGHT COD
+\    0 = NO COD
+\    1 = COD     RIGHT
+
+\******************************************************************************
+\ LISTS
+
+\ VT 1-S (LIST FOR MAGAZINE TRAINING AND VI TRAINING)
+LIST M = 0.052", 0.163", 0.288", 0.432", 0.599", 0.801", 1.053", 1.393", 1.916", 3.303"
+
+\ VT 1-S (RIGHT LIST FOR MAGAZINE TRAINING)
+LIST G = 0.052", 0.163", 0.288", 0.432", 0.599", 0.801", 1.053", 1.393", 1.916", 3.303"
+
+
+\ LIST COMPONENTS
+LIST K = 1, 2, 3, 4, 5
+
+\******************************************************************************
+\ SHOWS
+             
+\ SHOW 1, COMPONENT 
+\ SHOW 2, LVI
+\ SHOW 3, RVI
+\ SHOW 4, LRESP
+\ SHOW 5, RRESP   
+\ SHOW 6, LDIPPERS 
+\ SHOW 7, RDIPPERS
+
+\******************************************************************************
+\ BOX TEST
+
+S.S.1,
+S1,
+    .01":ON^HOUSELIGHT, ^LEFTLEVERLIGHT, ^RIGHTLEVERLIGHT ---> S2
+S2,
+    #R^LEFTLEVER: ON ^DIPPER ---> S3
+S3,
+    1": OFF ^DIPPER, ^LEFTLEVERLIGHT ---> S4
+
+S4,
+    #R^RIGHTLEVER: ON ^DIPPER ---> S6
+
+S6,
+    1": OFF ^DIPPER, ^RIGHTLEVERLIGHT, ^HOUSELIGHT; 
+     ADD B(0); SHOW 1, READY, B(0)---> S8
+
+S8,
+    1": ---> SX
+
+
+\******************************************************************************
+\ VI -VI CONCURRENT SCHEDULE
+\ ****************************+VI SCHEDULE LEFT*******************************
+S.S.2,
+S1,
+    #START: IF A(0) = 3 [@HERE, @ELSEWHERE]
+        @HERE: IF B(0) = 1 [@BOXTESTED, @NOT]
+            @BOXTESTED: ---> S2
+            @NOT: ---> STOPKILL
+        @ELSEWHERE: ---> S8
+ 
+S2,
+    .01": IF F(1)= 1 [@COMPONENT, @ICI]
+            @COMPONENT: ON ^LEFTLEVERLIGHT,^RIGHTLEVERLIGHT, ^HOUSELIGHT;
+                        RANDD B(3) = M;SET B(3) = B(3) * B(4);SHOW 2, LVI, B(3)/100 ---> S3
+            @ICI: --->SX
+
+S3,    
+
+        .01": IF F(0) = 1[@STOP, @PROCEED]
+                          @STOP: ---> SX
+                          @PROCEED: IF B(3) > 0 [@COUNTDOWN, @DIPPER]
+                                                @COUNTDOWN: SUB B(3); 
+                                                            SHOW 2, LVI, B(3)/ 100 ---> SX
+                                                @DIPPER: ---> S4 
+    
+    
+S4,
+    #R^LEFTLEVER: IF F(1)= 1 [@COMPONENT, @ICI]
+            @COMPONENT: IF F(3)=1 [@COD, @DIPPER]
+                @COD: --->SX
+                @DIPPER: SET F(0) = 1---> S5
+            @ICI:---> S2
+
+S5, 
+    .01":  OFF^RIGHTLEVERLIGHT, ^LEFTLEVERLIGHT; ON ^DIPPER; 
+           ADD B(13); SET D(B(17)) = B(2) + .4; ADD B(17); SET D(B(17)) = -987.987;
+            IF B(11)= 1 [@COMPONENT1, @OTHER]
+                @COMP1: ADD B(6); SHOW 6, LDIPPERSC1, B(6);
+                        SET C(B(16)) = B(1) + .11; ADD B(16); SET C(B(16)) = -987.987 ---> S6
+                @OTHER: IF B(11) = 2 [@COMPONENT2, @OTHER] 
+                    @COMPONENT2: ADD B(7); SHOW 6, LDIPPERSC2, B(7);
+                        SET C(B(16)) = B(1) + .31; ADD B(16); SET C(B(16)) = -987.987 ---> S6
+                    @OTHER: IF B(11) = 3 [@COMPONENT3, @OTHER]
+                        @COMPONENT3: ADD B(8); SHOW 6, LDIPPERSC3, B(8);
+                            SET C(B(16)) = B(1) + .51; ADD B(16); SET C(B(16)) = -987.987 ---> S6
+                        @OTHER: IF B(11) = 4 [@COMPONENT4, @COMPONENT5]
+                            @COMPONENT 4:  ADD B(9);SHOW 6, LDIPPERSC4, B(9);
+                                SET C(B(16)) = B(1) + .71; ADD B(16); SET C(B(16)) = -987.987 ---> S6
+                            @COMPONENT 5: ADD B(10); SHOW 6, LDIPPERSC5, B(10);
+                                SET C(B(16)) = B(1) + .91; ADD B(16); SET C(B(16)) = -987.987 ---> S6
+                                
+S6,                                 
+    .01": SET B(18) = A(5) ---> S7
+S7,
+    .01": IF B(18) > 0 [@MORE, @STOP]
+              @MORE: SUB B(18) ---> SX
+              @STOP: OFF ^DIPPER; 
+              SET F(0) = 0;
+              SET D(B(17)) = B(2) + .41; ADD B(17); SET D(B(17)) = -987.987 ---> S2
+S8,
+    1": ---> SX
+
+                        
+\****************VI SCHEDULE RIGHT*******************************
+S.S.3,
+S1,
+    #START: IF A(0) = 3 [@HERE, @ELSEWHERE]
+        @HERE: IF B(0) = 1 [@BOXTESTED, @NOT]
+            @BOXTESTED: ---> S2
+            @NOT: ---> STOPKILL
+        @ELSEWHERE: ---> S8
+S2,
+    
+    .01": IF F(1)= 1 [@COMPONENT, @ICI]
+            @COMPONENT: ON^LEFTLEVERLIGHT,^RIGHTLEVERLIGHT, ^HOUSELIGHT;
+            RANDD B(5) = G;SET B(5) = B(5) * B(12);SHOW 3, RVI, B(5)/100 ---> S3
+            @ICI: --->SX
+
+S3,    
+        .01": IF F(0) = 1[@STOP, @PROCEED]
+                          @STOP: ---> SX
+                          @PROCEED: IF B(5) > 0 [@COUNTDOWN, @DIPPER]
+                                                @COUNTDOWN: SUB B(5); 
+                                                            SHOW 3,RVI, B(5)/ 100 ---> SX
+                                                @DIPPER: ---> S4
+        
+S4,                                                   
+    #R^RIGHTLEVER: IF F(1)= 1 [@COMPONENT, @ICI]
+            @COMPONENT: IF F(2)=1 [@COD, @DIPPER]
+                @COD: --->SX
+                @DIPPER: SET F(0) = 1---> S5
+            @ICI:---> S2
+    
+S5,                                                
+    .01":  OFF^RIGHTLEVERLIGHT, ^LEFTLEVERLIGHT;
+            ON ^DIPPER; ADD B(13); SET D(B(17)) = B(2) + .5; ADD B(17); SET D(B(17)) = -987.987;
+                          IF B(11)= 1 [@COMPONENT1, @OTHER]
+                @COMP1: ADD B(36);SHOW 7, RDIPPERSC1, B(36);
+                    SET C(B(16)) = B(1) + .21; ADD B(16); SET C(B(16)) = -987.987 ---> S6
+                @OTHER: IF B(11) = 2 [@COMPONENT2, @OTHER] 
+                    @COMPONENT2: ADD B(37); SHOW 7, RDIPPERSC2, B(37);
+                        SET C(B(16)) = B(1) + .41; ADD B(16); SET C(B(16)) = -987.987 ---> S6
+                    @OTHER: IF B(11) = 3 [@COMPONENT3, @OTHER]
+                        @COMPONENT3: ADD B(38); SHOW 7, RDIPPERSC3, B(38);
+                            SET C(B(16)) = B(1) + .61; ADD B(16); SET C(B(16)) = -987.987 ---> S6
+                        @OTHER: IF B(11) = 4 [@COMPONENT4, @COMPONENT5]
+                            @COMPONENT 4:  ADD B(39); SHOW 7, RDIPPERSC4, B(39);
+                                SET C(B(16)) = B(1) + .81; ADD B(16); SET C(B(16)) = -987.987 ---> S6
+                            @COMPONENT 5: ADD B(40); SHOW 7, RDIPPERSC5, B(40);
+                                SET C(B(16)) = B(1) + .121; ADD B(16); SET C(B(16)) = -987.987 ---> S6
+                            
+S6,
+    .01": SET B(18) = A(5) ---> S7
+
+S7,    
+    .01": IF B(18) > 0 [@MORE, @STOP]
+              @MORE: SUB B(18) ---> SX
+              @STOP: OFF ^DIPPER; 
+              SET F(0) = 0;
+              SET D(B(17)) = B(2) + .51; ADD B(17); SET D(B(17)) = -987.987 --->S2
+
+S8,
+    1": ---> SX
+
+\*****************************************************************************
+\ VI-VI DYNAMIC COMPONENT AND ICI COUNTER
+\ FIVE COMPONENTS
+
+S.S.4,
+S1,
+    #START: IF A(0) = 3 [@HERE, @ELSEWHERE]
+        @HERE: IF B(0) = 1 [@BOXTESTED, @NOT]
+            @BOXTESTED:  ---> S2
+            @NOT: ---> STOPKILL
+        @ELSEWHERE: ---> S11
+S2,
+    .01": ON^HOUSELIGHT; RANDD B(11)=K ;SHOW 1, COMP, B(11); ADD B(46);
+            IF B(11) = 1 [@COMP1,@NOT]
+                        @COMP1: SET B(4) = A(12); SET B(12) = A(12); SET F(1)= 1;
+                                SET D(B(17)) = B(2) + .61; ADD B(17); SET D(B(17)) = -987.987; ---> S3
+                        @NOT: IF B(11)=2 [@COMP2, @NOT]
+                                @COMP2: SET B(4)=A(13); SET B(12)= A(14); SET F(1)= 1;
+                                        SET D(B(17)) = B(2) + .62; ADD B(17); SET D(B(17)) = -987.987 ---> S3
+                                @NOT: IF B(11)=3 [@COMP3, @NOT]
+                                     @COMP3:  SET B(4)= A(15); SET B(12)= A(16); SET F(1)= 1;
+                                              SET D(B(17)) = B(2) + .63; ADD B(17); SET D(B(17)) = -987.987 ---> S3
+                                         @NOT: IF B(11)=4 [@COMP4; @COMP5]
+                                        @COMP4: SET B(4)= A(14); SET B(12)= A(13); SET F(1)= 1; 
+                                                SET D(B(17)) = B(2) + .64; ADD B(17); SET D(B(17)) = -987.987 ---> S3
+                                        @COMP5:  SET B(4)= A(16); SET B(12)= A(15); SET F(1)= 1;
+                                                 SET D(B(17)) = B(2) + .65; ADD B(17); SET D(B(17)) = -987.987 ---> S3
+S3,                
+    .01": IF F(0)= 1 [@DURINGREINFORCEMENT, @NOT]
+                @DURINGREINFORCEMENT: ---> SX
+                @NOT: IF B(13) < A(4) [@CONTINUE, @ICI]
+                        @CONTINUE: ---> SX
+                        @ICI: SET B(13)= 0; ADD  B(11); SET F(1)=0; 
+                              SET D(B(17)) = B(2) + .66; ADD B(17); SET D(B(17)) = -987.987;
+                              OFF ^HOUSELIGHT, ^LEFTLEVERLIGHT,^RIGHTLEVERLIGHT ---> S4
+
+S4,                                               
+   .01": IF B(46) < A (11) [@CONTINUE, @FINISH]      
+                @CONTINUE: SET B(14) = A(10) ---> S5   
+                @FINISH: ---> STOPABORTFLUSH
+S5,                                          
+    .01": IF B(14)>0 [@CONTINUE, @STOP]
+                   @CONTINUE: SUB B(14); SHOW 1, T_ICI, B(14) --->SX
+                   @STOP: ---> S2            
+
+
+\******************************************************************************
+
+\ RESPONSE COUNTER
+
+S.S.5,
+S1,                                 
+    #START: ---> S2
+S2,
+    
+    #R^LEFTLEVER:IF F(1) = 0 [@ICI, @COMPONENT]
+        @ICI:  ADD B(22);SET D(B(17)) = B(2) + .7; ADD B(17); SET D(B(17)) = -987.987 ---> SX
+        @COMPONENT: IF F(0)=1 [@DURINGREINFORCEMENT, @NOT]
+            @DURINGREINFORCEMENT: ADD B(20);SET D(B(17)) = B(2) + .21; ADD B(17); SET D(B(17)) = -987.987 ---> SX
+            @NOT: SET D(B(17)) = B(2) + .2; ADD B(17); SET D(B(17)) = -987.987; 
+                 IF B(11)=1 [@COMPONENT1, @OTHER]
+                @COMPONENT1: ADD B(26); SHOW 4, LRESPC1, B(26); SET C(B(16)) = B(1) + .1; ADD B(16); SET C(B(16)) = -987.987 ---> SX
+                @OTHER: IF B(11)=2 [@COMPONENT2; @OTHER]
+                    @COMPONENT2: ADD B(27); SHOW 4, LRESPC2, B(27); SET C(B(16)) = B(1) + .3; ADD B(16); SET C(B(16)) = -987.987 ---> SX
+                    @OTHER: IF B(11)= 3 [@COMPONENT3, @OTHER]
+                        @COMPONENT3: ADD B(28); SHOW 4, LRESPC3, B(28); SET C(B(16)) = B(1) + .5; ADD B(16); SET C(B(16)) = -987.987 ---> SX
+                        @OTHER: IF B(11)=4 [@COMPONENT4, @COMPONENT5]
+                            @COMPONENT4: ADD B(29); SHOW 4, LRESPC4, B(29); SET C(B(16)) = B(1) + .7; ADD B(16); SET C(B(16)) = -987.987 ---> SX
+                            @COMPONENT5: ADD B(30); SHOW 4, LRESPC5, B(30); SET C(B(16)) = B(1) + .9; ADD B(16); SET C(B(16)) = -987.987 ---> SX
+                         
+    #R^RIGHTLEVER:IF F(1) = 0 [@ICI, @COMPONENT]
+        @ICI:  ADD B(23);SET D(B(17)) = B(2) + .8; ADD B(17); SET D(B(17)) = -987.987 ---> SX
+        @COMPONENT: IF F(0)=1 [@DURINGREINFORCEMENT, @NOT]
+            @DURINGREINFORCEMENT: ADD B(21);SET D(B(17)) = B(2) + .31; ADD B(17); SET D(B(17)) = -987.987 ---> SX
+            @NOT: SET D(B(17)) = B(2) + .3; ADD B(17); SET D(B(17)) = -987.987;
+                  IF B(11)=1 [@COMPONENT1, @OTHER]
+                @COMPONENT1: ADD B(31); SHOW 5, RRESPC1, B(31); SET C(B(16)) = B(1) + .2; ADD B(16); SET C(B(16)) = -987.987 ---> SX
+                @OTHER: IF B(11)=2 [@COMPONENT2; @OTHER]                     
+                    @COMPONENT2: ADD B(32); SHOW 5, RRESPC2, B(32); SET C(B(16)) = B(1) + .4; ADD B(16); SET C(B(16)) = -987.987 ---> SX
+                    @OTHER: IF B(11)= 3 [@COMPONENT3, @OTHER]
+                        @COMPONENT3: ADD B(33); SHOW 5, RRESPC3, B(33); SET C(B(16)) = B(1) + .6; ADD B(16); SET C(B(16)) = -987.987 ---> SX
+                        @OTHER: IF B(11)=4 [@COMPONENT4, @COMPONENT5]      
+                            @COMPONENT4: ADD B(34); SHOW 5, RRESPC4, B(34); SET C(B(16)) = B(1) + .8; ADD B(16); SET C(B(16)) = -987.987 ---> SX
+                            @COMPONENT5: ADD B(35); SHOW 5, RRESPC5, B(35); SET C(B(16)) = B(1) + .12; ADD B(16); SET C(B(16)) = -987.987 ---> SX
+
+
+
+
+\********************************************************************************
+\ CHANGE-OVER DELAY 
+\********************************************************************************
+S.S.6,
+S1,
+    #START: ---> S2  
+S2,
+    #R^LEFTLEVER: SET F(2) = 1 ---> S3
+                              
+    #R^RIGHTLEVER: SET F(3) = 1 ---> S4
+    
+S3,
+    5": SET F(2) = 0 ---> S2         
+
+S4,
+    5": SET F(3) = 0 ---> S2
+S5, 
+    1": ---> SX  
+
+\******************************************************************************
+\ SESSION TIME
+S.S.7,
+S1,
+    #START: SET D(B(17)) = B(2) + .1; ADD B(17); SET D(B(17)) = -987.987 ---> S2
+S2,
+    .01": ADD B(2);  IF B(1) < A(6) [@KEEPGOING, @STOP]
+                 @KEEPGOING: IF F(0) = 1 [@REINFORCEMENT, @NOT]
+                            @REINFORCEMENT: ---> SX
+                            @NOT: ADD B(1); SHOW 9, SESSIONTIME, B(1)/6000;
+                            IF F(1)=0 [@ICI, @COMPONENT]
+                                @ICI:---> SX
+                                @COMPONENT: IF B(11)=1 [@COMPONENT1, @OTHER]
+                                    @COMPONENT1: ADD B(41); SHOW 8, TIMEC1, B(41)/6000 ---> SX
+                                    @OTHER: IF B(11)=2; [@COMPONENT2; @OTHER]
+                                        @COMPONENT2: ADD B(42); SHOW 8, TIMEC2, B(42)/6000 ---> SX
+                                        @OTHER:IF B(11)=3 [@COMPONENT3,@OTHER]
+                                            @COMPONENT3: ADD B(43); SHOW 8, TIMEC3, B(43)/6000 ---> SX
+                                            @OTHER: IF B(11)=4 [@COMPONENT4,@COMPONENT5]
+                                                @COMPONENT4:ADD B(44); SHOW 8, TIMEC4, B(44)/6000 ---> SX 
+                                                @COMPONENT5:ADD B(45); SHOW 8, TIMEC5, B(45)/6000 ---> SX                
+                 @STOP: ADD B(19);SHOW 5, SESSION FINISHED, B(19);
+                                 SET D(B(17)) = B(2) + .9; ADD B(17); SET D(B(17)) = -987.987 ---> STOPABORTFLUSH

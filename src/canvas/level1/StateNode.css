@@ -1,0 +1,136 @@
+.state-node {
+  position: relative;
+  width: 220px;
+  min-height: 96px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border-strong);
+  background: var(--bg);
+  box-shadow: var(--shadow-sm);
+  font-size: 13px;
+}
+
+.state-node[data-papel='espera'] {
+  border-color: color-mix(in srgb, var(--role-wait) 55%, var(--border-strong));
+}
+.state-node[data-papel='reforco'] {
+  border-color: color-mix(in srgb, var(--role-reward) 55%, var(--border-strong));
+}
+.state-node[data-papel='timeout'] {
+  border-color: color-mix(in srgb, var(--role-timeout) 55%, var(--border-strong));
+}
+.state-node[data-papel='fim'] {
+  border-color: color-mix(in srgb, var(--role-end) 55%, var(--border-strong));
+}
+
+.state-node--selected {
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
+}
+
+.state-node--highlighted {
+  box-shadow: 0 0 0 2px var(--accent-border);
+}
+
+.state-node--active {
+  border-color: var(--ok);
+  animation: state-node-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes state-node-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ok) 55%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--ok) 20%, transparent);
+  }
+}
+
+.state-node-head {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.state-node-icon {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.state-node-nome {
+  font-weight: 600;
+  color: var(--text-h);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.state-node-indice {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--mono);
+}
+
+.state-node-resumo {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.state-node-actions {
+  position: absolute;
+  bottom: 4px;
+  right: 6px;
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+.state-node:hover .state-node-actions,
+.state-node--selected .state-node-actions {
+  opacity: 1;
+}
+
+.state-node-action {
+  border: none;
+  background: none;
+  padding: 2px;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.state-node-action:hover {
+  background: var(--bg-panel);
+}
+
+.state-node-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  box-shadow: var(--shadow-sm);
+}
+
+.state-node-badge--error {
+  color: var(--error);
+  border-color: var(--error);
+}
+.state-node-badge--warning {
+  color: var(--warn);
+  border-color: var(--warn);
+}
+.state-node-badge--info {
+  color: var(--text-muted);
+}
