@@ -13,6 +13,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 import type { Span } from '../core/tokens.ts'
 import type { TextEdit } from '../core/edit.ts'
 import type { DialectId } from '../core/validate/index.ts'
+import { medstateComplete } from './medstate-complete.ts'
 import { medstateHighlight } from './medstate-highlight.ts'
 import { medstateHover } from './medstate-hover.ts'
 import { medstateLinter } from './medstate-lint.ts'
@@ -73,6 +74,9 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function
         highlightActiveLineGutter(),
         history(),
         search(),
+        // Antes do keymap padrão: quem vem primeiro tem precedência, e o popup
+        // precisa das setas e do Enter antes de `defaultKeymap` movê-los.
+        medstateComplete(),
         keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
         lintGutter(),
         medstateLinter(() => dialectRef.current),

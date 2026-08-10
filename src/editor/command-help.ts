@@ -9,7 +9,7 @@ export interface CommandHelp {
  * glossário (`ui/glossary-terms.ts`): aquele explica conceitos de laboratório
  * ("o que é reforço"), este explica sintaxe ("o que o `ADD` faz").
  */
-const COMANDOS: Record<string, CommandHelp> = {
+export const COMANDOS: Record<string, CommandHelp> = {
   ON: { titulo: 'ON', texto: 'Liga uma porta de saída (luz, dispensador, som…) e mantém ligada até um OFF.' },
   OFF: { titulo: 'OFF', texto: 'Desliga uma porta de saída ligada antes por um ON.' },
   LOCKON: {
