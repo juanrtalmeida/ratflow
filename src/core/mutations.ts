@@ -1,8 +1,11 @@
 import type { Program, State, StateSet, Statement, Target, VarAliasBlock } from './ast.ts'
 import { detectNewline, printStateHeader, printStateSetHeader } from './printer.ts'
 import type { TextEdit } from './edit.ts'
-import { compileRule } from '../graph/compile.ts'
-import type { RuleGraph } from '../graph/model.ts'
+import type { Span } from './tokens.ts'
+import { compileRule, CompileError } from '../graph/compile.ts'
+import { foldablePulse, printPulseState } from '../graph/macros.ts'
+import type { NodeId, RuleGraph, RuleNode } from '../graph/model.ts'
+import { transitionRule } from '../graph/mutate.ts'
 
 /**
  * Gestos do canvas que viram `TextEdit`. Cada função recebe o nó da AST que vai
@@ -156,8 +159,32 @@ export function setCounterAlias(
 
 /** O texto do início da linha até `offset`, para preservar o recuo original. */
 function indentBefore(text: string, offset: number): string {
-  const lineStart = text.lastIndexOf('\n', offset - 1) + 1
-  return text.slice(lineStart, offset)
+  return text.slice(inicioDaLinha(text, offset), offset)
+}
+
+/** Início da linha física que contém `offset`. */
+function inicioDaLinha(text: string, offset: number): number {
+  return text.lastIndexOf('\n', offset - 1) + 1
+}
+
+/** Fim da linha física que contém `offset`, antes do `\r\n` ou `\n`. */
+function fimDaLinha(text: string, offset: number): number {
+  const nl = text.indexOf('\n', offset)
+  if (nl < 0) return text.length
+  return nl > 0 && text[nl - 1] === '\r' ? nl - 1 : nl
+}
+
+/**
+ * Recuo e quebra de linha a copiar do arquivo ao escrever uma regra. Sem
+ * `statement` de referência — um estado que só tem cabeçalho — cai no padrão do
+ * printer. É o que faz `setRule` e `insertStatement` formatarem igual.
+ */
+function ruleStyle(text: string, statement: Statement | undefined) {
+  const newline = detectNewline(text)
+  const indent = statement ? indentBefore(text, statement.span[0]) : '  '
+  const rotulado = statement?.segments.find((s) => s.labelSpan !== null)
+  const labelIndent = rotulado ? indentBefore(text, rotulado.labelSpan![0]) : indent + '     '
+  return { indent, labelIndent, newline }
 }
 
 /**
@@ -167,14 +194,220 @@ function indentBefore(text: string, offset: number): string {
  * reformatado por uma edição que só devia mudar um campo.
  */
 export function setRule(text: string, statement: Statement, graph: RuleGraph): TextEdit[] {
-  const lineStart = text.lastIndexOf('\n', statement.span[0] - 1) + 1
-  const indent = indentBefore(text, statement.span[0])
+  const newText = compileRule(graph, ruleStyle(text, statement))
+  const span: Span = [inicioDaLinha(text, statement.span[0]), statement.span[1]]
+  return [{ span, newText, label: 'editar regra' }]
+}
 
-  const rotulado = statement.segments.find((s) => s.labelSpan !== null)
-  const labelIndent = rotulado
-    ? indentBefore(text, rotulado.labelSpan![0])
-    : indent + '     '
+/**
+ * Acrescenta uma regra ao fim de um estado.
+ *
+ * A âncora é o **fim da linha física da última regra** — não `state.span[1]`,
+ * que o parser estende até o começo da linha do próximo cabeçalho e portanto já
+ * engoliu a linha em branco separadora e o comentário `\@nome:` que anota o
+ * estado seguinte; e nem `statement.span[1]` puro, que exclui comentário de fim
+ * de linha e empurraria o `\ nota` do autor para dentro da regra nova.
+ *
+ * Num estado que só tem cabeçalho, a âncora é o fim da linha do cabeçalho: é o
+ * único pedaço desse estado que existe no arquivo.
+ */
+export function insertStatement(text: string, state: State, graph: RuleGraph): TextEdit[] {
+  const style = ruleStyle(text, state.statements[0])
+  const ultima = state.statements[state.statements.length - 1]
+  const at = fimDaLinha(text, ultima ? ultima.span[1] : state.headerSpan[1])
+  return [
+    { span: [at, at], newText: style.newline + compileRule(graph, style), label: 'nova regra' },
+  ]
+}
 
-  const newText = compileRule(graph, { indent, labelIndent, newline: detectNewline(text) })
-  return [{ span: [lineStart, statement.span[1]], newText, label: 'editar regra' }]
+/**
+ * Remove uma regra inteira, linhas físicas e quebra de linha incluídas — uma
+ * regra com segmentos rotulados ocupa várias linhas, e `statement.span` para no
+ * último token significativo.
+ *
+ * Apagar a última regra deixa o estado só com o cabeçalho: continua um `.MPC`
+ * válido e vira o aviso `estado-sem-saida`, do mesmo jeito que `deleteState`
+ * deixa alvos órfãos em vez de sair corrigindo o arquivo por conta própria.
+ */
+export function deleteStatement(text: string, statement: Statement): TextEdit[] {
+  const nl = text.indexOf('\n', statement.span[1])
+  return [
+    {
+      span: [inicioDaLinha(text, statement.span[0]), nl < 0 ? text.length : nl + 1],
+      newText: '',
+      label: 'excluir regra',
+    },
+  ]
+}
+
+/**
+ * O gesto de puxar um fio de um estado a outro no nível 1: uma regra nova, com
+ * gatilho de tempo (ver `transitionRule`). A aresta nasce rotulada "depois de
+ * 5 segundos" — visivelmente provisória, e editável no nível 2.
+ */
+export function createTransition(
+  text: string,
+  state: State,
+  destino: number | 'SX',
+  duracao = '5',
+): TextEdit[] {
+  return insertStatement(text, state, transitionRule(destino, duracao))
+}
+
+/**
+ * Escreve "ligar por um tempo": o `ON` fica na regra, e o desligamento vai para
+ * um estado auxiliar novo que espera a duração, faz `OFF` e segue para onde a
+ * regra já ia. Um lote, uma transação, um desfazer.
+ *
+ * Não existe um comando único no MedState para isso, e o nó "pulsar" compila só
+ * o `ON` (ver `compileAction`) — sem este par de edições o dispositivo ficaria
+ * ligado para sempre, que é o tipo de erro silencioso que estraga um
+ * experimento.
+ */
+export function expandPulse(
+  text: string,
+  stateSet: StateSet,
+  state: State,
+  statement: Statement | undefined,
+  graph: RuleGraph,
+  pulseNodeId: NodeId,
+): CreateStateResult {
+  const pulso = graph.nodes[pulseNodeId]
+  if (!pulso || pulso.kind !== 'action' || pulso.spec !== 'pulsar') {
+    throw new CompileError('Este nó não é um "ligar por um tempo".', pulseNodeId)
+  }
+  const dispositivo = pulso.params.dispositivo
+  const duracao = pulso.params.duracao
+  if (!dispositivo || !duracao) {
+    throw new CompileError('Falta escolher o dispositivo e o tempo do pulso.', pulseNodeId)
+  }
+  if (pulso.params.unidade === 'min') {
+    // `printPulseState` escreve o gatilho do auxiliar em segundos. Um pulso em
+    // minutos não é um pulso — melhor pedir a troca do que converter o número
+    // por trás do usuário.
+    throw new CompileError('Um pulso é curto: escolha segundos, não minutos.', pulseNodeId)
+  }
+
+  // O auxiliar herda o destino da corrente do pulso, então é preciso achar onde
+  // ela termina.
+  let atual: RuleNode | null = pulso
+  while (atual && atual.kind === 'action') {
+    atual = atual.next === null ? null : (graph.nodes[atual.next] ?? null)
+  }
+  if (atual?.kind === 'decision') {
+    throw new CompileError(
+      'Ponha o "ligar por um tempo" depois da decisão: o desligamento precisa de um destino único.',
+      pulseNodeId,
+    )
+  }
+  if (atual?.kind !== 'target') {
+    throw new CompileError(
+      'Ligue este caminho a um destino antes: é para lá que o pulso volta depois de desligar.',
+      pulseNodeId,
+    )
+  }
+  if (atual.state === null) {
+    throw new CompileError('O destino desta regra não é um estado — o pulso não sabe para onde voltar.', atual.id)
+  }
+
+  const index = nextIndex(stateSet.states.map((s) => s.index))
+  // `SX` no auxiliar seria um laço infinito de `OFF`; voltar ao próprio estado
+  // é o equivalente honesto (com a diferença, real, de reiniciar os
+  // temporizadores dele — o que o usuário vê no canvas como uma seta de volta).
+  const destino = atual.state === 'SX' ? state.index : atual.state
+
+  const desviado: RuleGraph = {
+    ...graph,
+    nodes: { ...graph.nodes, [atual.id]: { ...atual, state: index } },
+  }
+
+  const newline = detectNewline(text)
+  const auxiliar = printPulseState(
+    { index, macro: { dispositivo, duracao }, destino },
+    ruleStyle(text, statement).indent,
+    newline,
+  )
+  const at = stateSet.span[1]
+
+  const regra =
+    statement === undefined
+      ? insertStatement(text, state, desviado)
+      : setRule(text, statement, desviado)
+  const auxEdit: TextEdit = {
+    span: [at, at],
+    newText: `${newline}${auxiliar}${newline}`,
+    label: 'ligar por um tempo',
+  }
+
+  // As duas âncoras coincidem quando este é o último estado do processo e o
+  // arquivo não termina em quebra de linha. Duas inserções puras no mesmo
+  // offset têm ordem indefinida e o lote as recusa — então viram uma só.
+  const ultima = regra[regra.length - 1]!
+  if (regra.length === 1 && ultima.span[0] === at && ultima.span[1] === at) {
+    return {
+      edits: [{ ...ultima, newText: ultima.newText + auxEdit.newText }],
+      index,
+    }
+  }
+
+  return { edits: [...regra, auxEdit], index }
+}
+
+/**
+ * Desfaz um pulso: apaga o estado auxiliar e devolve quem apontava para ele ao
+ * destino que vinha depois do `OFF`. `null` quando o estado não é (ou não é
+ * mais) um auxiliar íntegro — aí quem decide é o usuário, não o editor.
+ */
+export function deletePulseState(stateSet: StateSet, aux: State): TextEdit[] | null {
+  if (!foldablePulse(aux)) return null
+
+  const destino = aux.statements[0]?.segments[0]?.target?.state
+  // `SX` aponta para o próprio auxiliar, que está sendo apagado: sem destino
+  // para onde religar, não há como desfazer sozinho.
+  if (destino === undefined || destino === null || destino === 'SX') return null
+
+  const religacoes = stateSet.states
+    .filter((s) => s.index !== aux.index)
+    .flatMap((s) => s.statements)
+    .flatMap((s) => s.segments)
+    .map((seg) => seg.target)
+    .filter((t): t is Target => t?.state === aux.index)
+    .flatMap((t) => retargetTransition(t, destino))
+
+  return [...religacoes, ...deleteState(aux)]
+}
+
+/**
+ * Solta um estado no meio de uma transição existente: `Sa ---> Sb` vira
+ * `Sa ---> Snovo ---> Sb`. São três edições num lote só — criar o estado,
+ * desviar a transição de origem para ele, e dar a ele a regra que segue para o
+ * destino antigo. Sem essa terceira parte o estado novo seria um beco sem saída.
+ */
+export function insertStateInTransition(
+  text: string,
+  stateSet: StateSet,
+  target: Target,
+  opts: { papel?: string } = {},
+): CreateStateResult {
+  const destinoAntigo = target.state
+  const criado = createState(stateSet, text, opts)
+
+  // A regra do estado novo é escrita junto com o cabeçalho dele, na mesma
+  // inserção: um estado que ainda não existe no texto não tem `State` para
+  // servir de âncora a `insertStatement`, e duas inserções no mesmo offset
+  // seriam recusadas pelo lote.
+  const style = ruleStyle(text, undefined)
+  const regra = compileRule(
+    transitionRule(destinoAntigo === null ? 'SX' : destinoAntigo),
+    style,
+  )
+  const comRegra = criado.edits.map((edit) => ({
+    ...edit,
+    newText: edit.newText + regra + style.newline,
+  }))
+
+  return {
+    edits: [...comRegra, ...retargetTransition(target, criado.index)],
+    index: criado.index,
+  }
 }

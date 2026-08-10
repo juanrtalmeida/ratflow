@@ -169,11 +169,12 @@ function actionNodeFrom(
  */
 function buildSegment(
   segment: Segment,
-  segmentsByLabel: ReadonlyMap<string, Segment>,
+  indice: number,
+  segmentos: readonly Segment[],
   nodes: Record<NodeId, RuleNode>,
   nextId: (kind: RuleNode['kind']) => NodeId,
   rawNodes: NodeId[],
-  emUso: Set<string>,
+  emUso: Set<number>,
   naoResolvidos: string[],
 ): NodeId | null {
   const comandos = [...segment.commands]
@@ -193,13 +194,28 @@ function buildSegment(
 
     const ramo = (label: string | null): NodeId | null => {
       if (label === null) return null
-      const alvo = segmentsByLabel.get(label)
-      if (!alvo) {
+      // O primeiro segmento com esse rótulo **depois** deste — não o único num
+      // mapa por nome. Arquivos reais repetem o mesmo rótulo em `IF`s
+      // aninhados (`@STOP` duas vezes na mesma regra, uma por nível), e é a
+      // ordem no arquivo que diz qual pertence a qual, exatamente como a
+      // indentação do autor sugere. Resolver para frente também garante que a
+      // recursão sempre avança, então não há como girar em falso.
+      const alvo = segmentos.findIndex((s, i) => i > indice && s.label === label)
+      if (alvo === -1) {
         naoResolvidos.push(label)
         return null
       }
-      emUso.add(label)
-      return buildSegment(alvo, segmentsByLabel, nodes, nextId, rawNodes, emUso, naoResolvidos)
+      emUso.add(alvo)
+      return buildSegment(
+        segmentos[alvo]!,
+        alvo,
+        segmentos,
+        nodes,
+        nextId,
+        rawNodes,
+        emUso,
+        naoResolvidos,
+      )
     }
 
     nodes[id] = {
@@ -268,24 +284,22 @@ export function decompileStatement(statement: Statement): DecompileResult {
   const rawNodes: NodeId[] = []
 
   const primeiro = statement.segments[0]
-  const rotulados = new Map(
-    statement.segments
-      .filter((s) => s.label !== null)
-      .map((s) => [s.label!, s] as const),
-  )
-  const emUso = new Set<string>()
+  // Índices dos segmentos já encaixados no grafo. Índice, e não nome: com o
+  // mesmo rótulo repetido na regra, marcar por nome daria os dois como usados e
+  // esconderia um segmento de fato órfão.
+  const emUso = new Set<number>()
   const naoResolvidos: string[] = []
 
   const corpo = primeiro
-    ? buildSegment(primeiro, rotulados, nodes, nextId, rawNodes, emUso, naoResolvidos)
+    ? buildSegment(primeiro, 0, statement.segments, nodes, nextId, rawNodes, emUso, naoResolvidos)
     : null
 
   if (naoResolvidos.length > 0) return rawFallback(statement, nextId)
 
   // Segmento rotulado que nenhum `IF` alcança não tem lugar no grafo. Em vez de
   // deixá-lo cair fora, a regra inteira vira texto preservado.
-  const orfaos = [...rotulados.keys()].filter((label) => !emUso.has(label))
-  if (orfaos.length > 0) return rawFallback(statement, nextId)
+  const orfaos = statement.segments.some((s, i) => s.label !== null && !emUso.has(i))
+  if (orfaos) return rawFallback(statement, nextId)
 
   const raizId = nextId('trigger')
   const raiz = triggerNodeFrom(statement.trigger, raizId, corpo)

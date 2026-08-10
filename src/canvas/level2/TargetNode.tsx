@@ -1,7 +1,7 @@
 import { Handle, Position, type Node, type NodeProps } from '@xyflow/react'
 import { stateLabel } from '../../core/ast.ts'
 import type { TargetNode as TargetNodeModel } from '../../graph/model.ts'
-import type { Level2NodeData } from './node-data.ts'
+import { propsDoNo, type Level2NodeData } from './node-data.ts'
 import './Level2Node.css'
 
 export type TargetNodeType = Node<Level2NodeData, 'target'>
@@ -23,7 +23,7 @@ export function TargetNode({ data }: NodeProps<TargetNodeType>) {
   // dropdown, do mesmo jeito que um gatilho ou ação crus.
   if (node.state === null) {
     return (
-      <div className="l2-node" data-kind="target">
+      <div {...propsDoNo(data)} data-kind="target">
         <Handle type="target" position={Position.Left} />
         <div className="l2-node-head">
           <span>🧩</span>
@@ -40,7 +40,7 @@ export function TargetNode({ data }: NodeProps<TargetNodeType>) {
   const value = node.state === 'SX' ? 'SX' : String(node.state)
 
   return (
-    <div className="l2-node" data-kind="target">
+    <div {...propsDoNo(data)} data-kind="target">
       <Handle type="target" position={Position.Left} />
       <div className="l2-node-head">
         <span>{node.state === 'SX' ? '↺' : '▶'}</span>
@@ -48,7 +48,7 @@ export function TargetNode({ data }: NodeProps<TargetNodeType>) {
       </div>
       <div className="l2-node-body">
         <select
-          className="param-field-input"
+          className="param-field-input nodrag"
           value={value}
           onChange={(e) => {
             const v = e.target.value

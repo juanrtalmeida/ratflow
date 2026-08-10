@@ -2,7 +2,7 @@ import { Handle, Position, type Node, type NodeProps } from '@xyflow/react'
 import { RAW_SPEC, type ActionNode as ActionNodeModel } from '../../graph/model.ts'
 import { actionSpec } from '../../vocab/catalog.ts'
 import { DurationField, ParamField } from './ParamField.tsx'
-import type { Level2NodeData } from './node-data.ts'
+import { propsDoNo, type Level2NodeData } from './node-data.ts'
 import './Level2Node.css'
 
 export type ActionNodeType = Node<Level2NodeData, 'action'>
@@ -16,7 +16,7 @@ export function ActionNode({ data }: NodeProps<ActionNodeType>) {
     set({ params: { ...node.params, [id]: value } })
 
   return (
-    <div className="l2-node" data-kind="action">
+    <div {...propsDoNo(data)} data-kind="action">
       <Handle type="target" position={Position.Left} />
       <div className="l2-node-head">
         <span>{spec?.icon ?? '🧩'}</span>

@@ -1,7 +1,7 @@
 import { Handle, Position, type Node, type NodeProps } from '@xyflow/react'
 import type { DecisionNode as DecisionNodeModel } from '../../graph/model.ts'
 import { ParamField } from './ParamField.tsx'
-import type { Level2NodeData } from './node-data.ts'
+import { propsDoNo, type Level2NodeData } from './node-data.ts'
 import './Level2Node.css'
 
 export type DecisionNodeType = Node<Level2NodeData, 'decision'>
@@ -15,7 +15,7 @@ export function DecisionNode({ data }: NodeProps<DecisionNodeType>) {
   const set = (patch: Record<string, unknown>) => data.onEdit(node.id, patch)
 
   return (
-    <div className="l2-node" data-kind="decision">
+    <div {...propsDoNo(data)} data-kind="decision">
       <Handle type="target" position={Position.Left} />
       <div className="l2-node-head">
         <span>◆</span>

@@ -2,7 +2,7 @@ import { Handle, Position, type Node, type NodeProps } from '@xyflow/react'
 import { RAW_SPEC, type TriggerNode as TriggerNodeModel } from '../../graph/model.ts'
 import { eventSpec } from '../../vocab/catalog.ts'
 import { DurationField, ParamField } from './ParamField.tsx'
-import type { Level2NodeData } from './node-data.ts'
+import { propsDoNo, type Level2NodeData } from './node-data.ts'
 import './Level2Node.css'
 
 export type TriggerNodeType = Node<Level2NodeData, 'trigger'>
@@ -16,7 +16,7 @@ export function TriggerNode({ data }: NodeProps<TriggerNodeType>) {
     set({ params: { ...node.params, [id]: value } })
 
   return (
-    <div className="l2-node" data-kind="trigger">
+    <div {...propsDoNo(data)} data-kind="trigger">
       <div className="l2-node-head">
         <span>{spec?.icon ?? '🧩'}</span>
         <span>{spec?.label ?? 'Gatilho avançado'}</span>

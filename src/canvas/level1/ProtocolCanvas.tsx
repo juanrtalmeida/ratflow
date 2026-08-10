@@ -2,7 +2,6 @@ import {
   Background,
   Controls,
   MarkerType,
-  MiniMap,
   ReactFlow,
   useEdgesState,
   useNodesState,
@@ -11,7 +10,8 @@ import {
   type ReactFlowInstance,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import { aceitaBloco, blocoDoEvento, fioNoPonteiro } from '../bloco-arrastado.ts'
 import type { Program, StateSet, Target } from '../../core/ast.ts'
 import type { Diagnostic } from '../../core/validate/types.ts'
 import { EMPTY_PROFILE, type HardwareProfile } from '../../vocab/profile.ts'
@@ -38,12 +38,18 @@ export interface ProtocolCanvasProps {
   readonly onMoveState?: (stateIndex: number, pos: { x: number; y: number }) => void
   /** Duplo clique num estado: abre o nível 2 (lógica em nós). */
   readonly onOpenState?: (stateIndex: number) => void
-  /** Duplo clique no vazio do canvas: cria um estado ali. */
-  readonly onCreateState?: (pos: { x: number; y: number }) => void
+  /** Duplo clique no vazio do canvas, ou bloco da paleta solto ali: cria um estado. */
+  readonly onCreateState?: (pos: { x: number; y: number }, papel?: string) => void
   readonly onRenameState?: (stateIndex: number) => void
   readonly onDeleteState?: (stateIndex: number) => void
   /** Arrastar a ponta de uma seta para outro nó: religa a transição. */
   readonly onRetargetTransition?: (target: Target, newState: number | 'SX') => void
+  /** Puxar um fio de um estado a outro: escreve uma regra de transição nova. */
+  readonly onCreateTransition?: (from: number, to: number | 'SX') => void
+  /** Bloco de estado solto sobre uma seta: entra no meio daquela transição. */
+  readonly onInsertStateInTransition?: (edge: ProtocolEdgeData, papel?: string) => void
+  /** Apagar uma seta (tecla Delete) — a regra inteira, quando a seta é a regra. */
+  readonly onDeleteTransition?: (edge: ProtocolEdgeData) => void
   /** Clique (simples) num estado: espelha para o editor de código. */
   readonly onSelectState?: (stateIndex: number) => void
   /** Estado a destacar porque o cursor do editor de código está nele. */
@@ -71,6 +77,9 @@ export const ProtocolCanvas = forwardRef<ProtocolCanvasHandle, ProtocolCanvasPro
       onRenameState,
       onDeleteState,
       onRetargetTransition,
+      onCreateTransition,
+      onInsertStateInTransition,
+      onDeleteTransition,
       onSelectState,
       highlightedState = null,
       activeState = null,
@@ -107,7 +116,11 @@ export const ProtocolCanvas = forwardRef<ProtocolCanvasHandle, ProtocolCanvasPro
         source: e.source,
         target: e.target,
         data: e.data,
-        reconnectable: true,
+        // Só a ponta do destino: `handleReconnect` não tem como saber qual das
+        // duas foi arrastada (o React Flow não informa) e sempre reescreve o
+        // destino, então arrastar a origem era um gesto que não fazia nada.
+        // Mover a origem é mudar a regra de estado — outro gesto, outra hora.
+        reconnectable: 'target',
         markerEnd: { type: MarkerType.ArrowClosed, color: 'var(--text-muted)' },
       })),
     [graph],
@@ -146,6 +159,66 @@ export const ProtocolCanvas = forwardRef<ProtocolCanvasHandle, ProtocolCanvasPro
     onRetargetTransition(data.astTarget, newState)
   }
 
+  // Realce do fio sob o ponteiro durante um arrasto. Mora no estado do React
+  // Flow, não nos dados do grafo: mexer no `useMemo` de `initialEdges`
+  // reconstruiria todas as arestas a cada `dragover`.
+  const [fioAlvo, setFioAlvo] = useState<string | null>(null)
+
+  useEffect(() => {
+    setEdges((atuais) =>
+      atuais.map((e) => ({ ...e, className: e.id === fioAlvo ? 'fio-alvo' : undefined })),
+    )
+  }, [fioAlvo, setEdges])
+
+  const handleDragOver = (event: React.DragEvent) => {
+    if (!aceitaBloco(event)) return
+    event.preventDefault() // sem isto o `drop` nunca dispara
+    event.dataTransfer.dropEffect = 'copy'
+    const id = fioNoPonteiro(event)
+    if (id !== fioAlvo) setFioAlvo(id)
+  }
+
+  const handleDrop = (event: React.DragEvent) => {
+    setFioAlvo(null)
+    if (!aceitaBloco(event)) return
+    event.preventDefault()
+
+    const bloco = blocoDoEvento(event)
+    if (bloco?.kind !== 'estado') return
+    const papel = bloco.papel ?? undefined
+
+    const fio = fioNoPonteiro(event)
+    if (fio) {
+      const data = edges.find((e) => e.id === fio)?.data
+      if (data) onInsertStateInTransition?.(data, papel)
+      return
+    }
+
+    if (!rfInstance.current) return
+    const pos = rfInstance.current.screenToFlowPosition({ x: event.clientX, y: event.clientY })
+    onCreateState?.(pos, papel)
+  }
+
+  /**
+   * Apagar acontece **no texto**, e devolvemos `false` para o React Flow nunca
+   * mexer no estado local: senão o nó desaparece do canvas antes da
+   * confirmação, e volta torto se ela for cancelada (o realinhamento só vem no
+   * próximo reparse).
+   */
+  const handleBeforeDelete = async ({
+    nodes: paraApagar,
+    edges: fiosParaApagar,
+  }: {
+    nodes: StateNodeType[]
+    edges: TransitionEdgeType[]
+  }) => {
+    for (const node of paraApagar) onDeleteState?.(Number(node.id))
+    for (const edge of fiosParaApagar) {
+      if (edge.data) onDeleteTransition?.(edge.data)
+    }
+    return false
+  }
+
   const handlePaneDoubleClick = (event: React.MouseEvent) => {
     if (!onCreateState || !rfInstance.current) return
     const target = event.target as HTMLElement
@@ -155,7 +228,14 @@ export const ProtocolCanvas = forwardRef<ProtocolCanvasHandle, ProtocolCanvasPro
   }
 
   return (
-    <div className="protocol-canvas" ref={containerRef} onDoubleClick={handlePaneDoubleClick}>
+    <div
+      className="protocol-canvas"
+      ref={containerRef}
+      onDoubleClick={handlePaneDoubleClick}
+      onDragOver={handleDragOver}
+      onDragLeave={() => setFioAlvo(null)}
+      onDrop={handleDrop}
+    >
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -168,6 +248,14 @@ export const ProtocolCanvas = forwardRef<ProtocolCanvasHandle, ProtocolCanvasPro
         onNodeClick={(_event, node) => onSelectState?.(Number(node.id))}
         onReconnect={handleReconnect}
         edgesReconnectable
+        // Toda ligação estado→estado é legítima no MedState (auto-laço é `SX`,
+        // dois gatilhos para o mesmo destino é comum), então não há
+        // `isValidConnection`: seria um predicado que sempre diz sim.
+        onConnect={(c) =>
+          onCreateTransition?.(Number(c.source), c.target === c.source ? 'SX' : Number(c.target))
+        }
+        onBeforeDelete={handleBeforeDelete}
+        deleteKeyCode={['Delete', 'Backspace']}
         onInit={(instance) => {
           rfInstance.current = instance
         }}
@@ -177,7 +265,6 @@ export const ProtocolCanvas = forwardRef<ProtocolCanvasHandle, ProtocolCanvasPro
       >
         <Background gap={24} />
         <Controls showInteractive={false} />
-        <MiniMap pannable zoomable />
       </ReactFlow>
     </div>
   )

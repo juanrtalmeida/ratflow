@@ -14,6 +14,18 @@ import { EMPTY_PROFILE, type HardwareProfile } from '../../vocab/profile.ts'
 
 export type TransitionKind = 'start' | 'response' | 'time' | 'signal' | 'raw'
 
+/**
+ * Ícone de cada `\@papel:` de estado. Mora aqui, e não no `StateNode`, porque
+ * a paleta oferece os mesmos papéis e este é o módulo de dados do nível 1 —
+ * um componente exportando tabela quebra o hot reload do Vite.
+ */
+export const PAPEL_ICON: Record<string, string> = {
+  espera: '⏳',
+  reforco: '🍬',
+  timeout: '⏱',
+  fim: '🏁',
+}
+
 // `extends Record<string, unknown>` é o que satisfaz a restrição de tipo de
 // dado de nó/aresta do React Flow — ver ProtocolCanvas.tsx.
 export interface ProtocolNodeData extends Record<string, unknown> {
@@ -40,6 +52,16 @@ export interface ProtocolEdgeData extends Record<string, unknown> {
   readonly arc: boolean
   /** O nó `Target` original — é o que uma religação de aresta reescreve. */
   readonly astTarget: Target
+  /** Estado de onde a transição sai (o `Sn` do bloco, não o destino). */
+  readonly stateIndex: number
+  /** Índice da regra dentro do estado — endereça o `Statement` para apagá-la. */
+  readonly statementIndex: number
+  /**
+   * Quantos segmentos a regra tem. Maior que 1 significa que esta seta é um
+   * ramo de um `IF`: apagá-la sozinha deixaria o `IF` apontando para um rótulo
+   * inexistente, então quem apaga precisa saber a diferença.
+   */
+  readonly segmentCount: number
 }
 
 export interface ProtocolEdge {
@@ -110,6 +132,9 @@ function buildEdges(
           selfLoop: target.state === 'SX',
           arc: false,
           astTarget: target,
+          stateIndex: state.index,
+          statementIndex,
+          segmentCount: statement.segments.length,
         },
       })
     })

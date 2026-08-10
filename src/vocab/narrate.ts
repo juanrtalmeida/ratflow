@@ -11,6 +11,7 @@ import type {
 } from '../core/ast.ts'
 import { stateLabel } from '../core/ast.ts'
 import { buildIndex } from '../core/validate/index.ts'
+import { suggestCounters } from './counters.ts'
 import { deviceByConstant, type HardwareProfile } from './profile.ts'
 import { EMPTY_PROFILE } from './profile.ts'
 
@@ -73,6 +74,19 @@ export function createNarrator(
     return apelido ? `«${apelido}»` : `«${nome}»`
   }
 
+  /**
+   * Nome de uma posição de array, quando o autor documentou a posição num
+   * comentário (`\ B(5) = LEFTLEVER RESPONSES`). É o que faz a frase dizer
+   * "«LEFTLEVER RESPONSES»" em vez de "«B» na posição 5" — nos programas reais,
+   * que usam arrays em vez de `VAR_ALIAS`, esse comentário é o único nome que
+   * existe.
+   */
+  const nomeDoElemento = new Map(
+    suggestCounters(program)
+      .filter((c) => c.index !== null && c.nome !== null)
+      .map((c) => [c.operando, c.nome!] as const),
+  )
+
   /** Nome do dispositivo, com ícone, quando a constante estiver no perfil. */
   const dispositivo = (nome: string): string => {
     const device = deviceByConstant(profile, nome)
@@ -86,8 +100,11 @@ export function createNarrator(
         return dispositivo(operand.name)
       case 'variable':
         return variavel(operand.name)
-      case 'element':
+      case 'element': {
+        const documentado = nomeDoElemento.get(`${operand.name}(${operand.index})`)
+        if (documentado) return `«${documentado}»`
         return `${variavel(operand.name)} na posição ${operand.index}`
+      }
       case 'number':
         return numero(operand.name)
       default:

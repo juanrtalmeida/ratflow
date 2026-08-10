@@ -1,0 +1,176 @@
+.paleta {
+  flex: none;
+  width: 216px;
+  overflow-y: auto;
+  /* O topo reserva a faixa da barra flutuante — só o canvas passa por trás dela. */
+  padding: calc(var(--barra-altura, 40px) + 6px) 12px 24px;
+  border-right: 1px solid var(--border);
+  background: var(--bg-panel);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Recolhida: só a aba de reabrir, para o canvas ficar limpo. */
+.paleta--fechada {
+  width: auto;
+  padding: calc(var(--barra-altura, 40px) + 6px) 4px 8px;
+  gap: 0;
+}
+
+.paleta-topo {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.paleta-alternar {
+  flex: none;
+  padding: 2px 5px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text-muted);
+  font: inherit;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.paleta-alternar:hover {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+.paleta-dica {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+/* Empurra "Sua caixa" e os sinais para o pé, sem depender de `margin-top: auto`
+   em cada um. */
+.paleta-rodape {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.paleta-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.paleta-grupo-titulo {
+  margin: 0 0 2px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.paleta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  cursor: grab;
+  font-size: 13px;
+  color: var(--text);
+  /* O arrasto é do HTML5, não seleção de texto. */
+  user-select: none;
+}
+
+.paleta-item:hover {
+  border-color: var(--accent-border);
+  color: var(--text-h);
+}
+
+.paleta-item:active {
+  cursor: grabbing;
+}
+
+.paleta-item-icon {
+  flex: none;
+  width: 18px;
+  text-align: center;
+}
+
+.paleta-item-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.paleta-caixa {
+  font-size: 12px;
+}
+
+.paleta-caixa summary {
+  cursor: pointer;
+  padding: 3px 0;
+  color: var(--text);
+}
+
+.paleta-lista {
+  list-style: none;
+  margin: 4px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--text-muted);
+}
+
+.paleta-campo {
+  width: 100%;
+  margin-bottom: 4px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.paleta-botao {
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  background: var(--accent-bg);
+  color: var(--text-h);
+  font: inherit;
+  cursor: pointer;
+}
+
+.paleta-botao:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Contador: nome do autor em cima, operando MedState em baixo — é o operando
+   que vai escrito no arquivo, então ele continua à vista. */
+.paleta-lista li {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.35;
+}
+
+.paleta-contador-nome {
+  color: var(--text);
+}
+
+.paleta-contador-op {
+  font-family: var(--mono);
+  font-size: 11px;
+}

@@ -37,6 +37,29 @@ describe('buildProtocolGraph', () => {
     expect(paraS4?.data.kind).toBe('time')
   })
 
+  it('endereça a regra de origem em cada aresta, marcando os ramos de um IF', () => {
+    const program = parseProgram(fr5.text)
+    const graph = buildProtocolGraph(program.stateSets[0]!, program)
+
+    // As duas saídas de S2 que vêm do `IF` são segmentos da MESMA regra:
+    // `segmentCount` > 1 é o que avisa quem for apagar que a seta é um ramo, e
+    // que apagá-la sozinha deixaria o `IF` apontando para um rótulo que não
+    // existe mais. São 3 e não 2 porque o segmento base — o que carrega o
+    // próprio `IF`, sem rótulo e sem seta — também conta.
+    const doIf = graph.edges.filter((e) => e.source === '2' && e.data.kind === 'response')
+    expect(doIf).toHaveLength(2)
+    for (const edge of doIf) {
+      expect(edge.data.stateIndex).toBe(2)
+      expect(edge.data.statementIndex).toBe(0)
+      expect(edge.data.segmentCount).toBe(3)
+    }
+
+    // A regra de tempo tem um segmento só — a seta É a regra inteira.
+    const tempo = graph.edges.find((e) => e.source === '2' && e.data.kind === 'time')!
+    expect(tempo.data.statementIndex).toBe(1)
+    expect(tempo.data.segmentCount).toBe(1)
+  })
+
   it('rotula a aresta do início da sessão', () => {
     const program = parseProgram(fr5.text)
     const graph = buildProtocolGraph(program.stateSets[0]!, program)

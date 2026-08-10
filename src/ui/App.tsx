@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import fr5 from '../../fixtures/fr5-sintetico.MPC?raw'
-import { ProcessTabs } from '../canvas/ProcessTabs.tsx'
+import { Paleta } from '../canvas/Paleta.tsx'
 import { ProtocolCanvas, type ProtocolCanvasHandle } from '../canvas/level1/ProtocolCanvas.tsx'
+import type { ProtocolEdgeData } from '../canvas/level1/protocol-graph.ts'
 import { LogicCanvas } from '../canvas/level2/LogicCanvas.tsx'
 import {
   findState,
@@ -14,20 +15,26 @@ import {
 } from '../core/ast.ts'
 import type { TextEdit } from '../core/edit.ts'
 import {
+  createDevice,
   createProcess,
   createState,
+  createTransition,
   deleteState,
+  deleteStatement,
+  insertStateInTransition,
   renameState,
   retargetTransition,
+  setCounterAlias,
   setStatePosition,
 } from '../core/mutations.ts'
 import { parseProgram } from '../core/parser.ts'
 import type { Snapshot } from '../core/simulate/machine.ts'
 import { defaultValues, templateById } from '../core/templates/index.ts'
-import { validate } from '../core/validate/index.ts'
+import { buildIndex, validate } from '../core/validate/index.ts'
 import { CodeEditor, type CodeEditorHandle } from '../editor/CodeEditor.tsx'
 import { loadSession, saveSession } from '../project/db.ts'
 import { openMpcFile, saveMpcFile } from '../project/files.ts'
+import { suggestCounters } from '../vocab/counters.ts'
 import { profileFromSuggestions, suggestDevices } from '../vocab/profile.ts'
 import { ActionsDrawer } from './ActionsDrawer.tsx'
 import { Glossary } from './Glossary.tsx'
@@ -39,6 +46,13 @@ import './App.css'
 
 const DIALECT = 'V' as const
 const AUTOSAVE_DEBOUNCE_MS = 800
+
+/**
+ * Ações escondidas da paleta. Vazio hoje: "ligar por um tempo" já escreve o
+ * estado auxiliar com o `OFF` (ver `expandPulse`). Fica como o lugar óbvio
+ * para tirar do ar uma ação cujo caminho de escrita não esteja pronto.
+ */
+const ACOES_SEM_PALETA: readonly string[] = []
 
 type SidePanel = 'none' | 'code' | 'simulator'
 
@@ -107,6 +121,8 @@ export function App() {
     () => profileFromSuggestions(suggestDevices(program)),
     [program],
   )
+  const index = useMemo(() => buildIndex(program), [program])
+  const counters = useMemo(() => suggestCounters(program), [program])
 
   const stateSet = findStateSet(program, activeStateSet) ?? program.stateSets[0]
   const state = stateSet && openState !== null ? findState(stateSet, openState) : undefined
@@ -146,9 +162,9 @@ export function App() {
   )
 
   const handleCreateState = useCallback(
-    (pos: { x: number; y: number }) => {
+    (pos: { x: number; y: number }, papel?: string) => {
       if (!stateSet) return
-      const { edits } = createState(stateSet, text ?? '', { pos })
+      const { edits } = createState(stateSet, text ?? '', { pos, papel })
       applyToText(edits)
     },
     [stateSet, text, applyToText],
@@ -182,6 +198,60 @@ export function App() {
       applyToText(retargetTransition(target, newState))
     },
     [applyToText],
+  )
+
+  const handleCreateTransition = useCallback(
+    (from: number, to: number | 'SX') => {
+      const alvo = stateSet && findState(stateSet, from)
+      if (alvo) applyToText(createTransition(text ?? '', alvo, to))
+    },
+    [stateSet, text, applyToText],
+  )
+
+  const handleInsertStateInTransition = useCallback(
+    (edge: ProtocolEdgeData, papel?: string) => {
+      if (!stateSet) return
+      const { edits } = insertStateInTransition(text ?? '', stateSet, edge.astTarget, { papel })
+      applyToText(edits)
+    },
+    [stateSet, text, applyToText],
+  )
+
+  const handleDeleteTransition = useCallback(
+    (edge: ProtocolEdgeData) => {
+      const alvo = stateSet && findState(stateSet, edge.stateIndex)
+      const statement = alvo?.statements[edge.statementIndex]
+      if (!statement) return
+
+      // Uma seta que é um ramo de `Se…` não pode ser apagada sozinha: o `IF`
+      // ficaria apontando para um rótulo que não existe mais, e a regra inteira
+      // cairia no caminho cru. Quem quer mexer nisso mexe no nível 2, onde os
+      // dois ramos estão à vista.
+      if (edge.segmentCount > 1) {
+        window.alert(
+          'Esta seta é um ramo de um "Se…". Abra o estado (duplo clique) para mexer nos ramos.',
+        )
+        return
+      }
+
+      if (window.confirm(`Excluir a transição «${edge.label}»? A regra inteira sai do arquivo.`)) {
+        applyToText(deleteStatement(text ?? '', statement))
+      }
+    },
+    [stateSet, text, applyToText],
+  )
+
+  // Declarar hardware é escrever no preâmbulo e deixar a inferência achar: o
+  // perfil não é um banco à parte, é lido do próprio arquivo a cada parse.
+  const handleCreateDevice = useCallback(
+    (nome: string, porta: number) => applyToText(createDevice(program, text ?? '', nome, porta)),
+    [program, text, applyToText],
+  )
+
+  const handleCounterAlias = useCallback(
+    (variable: string, alias: string) =>
+      applyToText(setCounterAlias(program, text ?? '', variable, alias)),
+    [program, text, applyToText],
   )
 
   const handleCreateProcess = () => {
@@ -338,8 +408,37 @@ export function App() {
             <span>{stateLabel(state)}</span>
           </span>
         ) : (
-          <span className="app-bar-sub">{fileName ?? 'sem título'}</span>
+          // O "+" aparece mesmo num arquivo sem nenhum processo: é o único
+          // caminho para criar o primeiro.
+          <span className="app-bar-sub app-bar-processo">
+            {stateSet && (
+              <select
+                className="app-bar-processo-select"
+                value={stateSet.index}
+                onChange={(e) => setActiveStateSet(Number(e.target.value))}
+                aria-label="Processo"
+                title="Processo paralelo (S.S.n)"
+              >
+                {program.stateSets.map((s) => (
+                  <option key={s.index} value={s.index}>
+                    {stateSetLabel(s)} · {s.states.length}{' '}
+                    {s.states.length === 1 ? 'estado' : 'estados'}
+                  </option>
+                ))}
+              </select>
+            )}
+            <button
+              type="button"
+              className="app-bar-processo-novo"
+              title="Novo processo"
+              aria-label="Novo processo"
+              onClick={handleCreateProcess}
+            >
+              +
+            </button>
+          </span>
         )}
+        <span className="app-bar-sub">{fileName ?? 'sem título'}</span>
         <button
           type="button"
           className="app-bar-toggle-code"
@@ -379,18 +478,22 @@ export function App() {
         onTour={() => setTourStep(0)}
       />
 
-      {!state && (
-        <ProcessTabs
-          program={program}
-          activeIndex={stateSet?.index ?? 1}
-          onSelect={setActiveStateSet}
-          onCreateProcess={handleCreateProcess}
-          onOpenGlossary={handleOpenGlossary}
-        />
-      )}
-
       <main className="app-body">
         <div className="app-canvas-area">
+          {stateSet && (
+            <Paleta
+              nivel={state ? 2 : 1}
+              program={program}
+              profile={profile}
+              index={index}
+              counters={counters}
+              onCriarDispositivo={handleCreateDevice}
+              onApelidarContador={handleCounterAlias}
+              onSelecionarProcesso={setActiveStateSet}
+              onOpenGlossary={handleOpenGlossary}
+              ocultarAcoes={ACOES_SEM_PALETA}
+            />
+          )}
           {state && stateSet ? (
             <LogicCanvas
               key={`${stateSet.index}.${state.index}`}
@@ -417,6 +520,9 @@ export function App() {
               onRenameState={handleRenameState}
               onDeleteState={handleDeleteState}
               onRetargetTransition={handleRetargetTransition}
+              onCreateTransition={handleCreateTransition}
+              onInsertStateInTransition={handleInsertStateInTransition}
+              onDeleteTransition={handleDeleteTransition}
               onSelectState={handleSelectState}
               highlightedState={highlightedState}
               activeState={
@@ -425,8 +531,8 @@ export function App() {
             />
           ) : (
             <p className="app-placeholder">
-              Este arquivo não tem nenhum processo (S.S.n) ainda — clique em "+" acima para criar o
-              primeiro.
+              Este arquivo não tem nenhum processo (S.S.n) ainda — clique em "+" na barra do topo
+              para criar o primeiro.
             </p>
           )}
         </div>

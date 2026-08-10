@@ -1,6 +1,7 @@
 import {
   nodeAt,
   RAW_SPEC,
+  unreachableNodes,
   type ActionNode,
   type DecisionNode,
   type NodeId,
@@ -227,6 +228,19 @@ export function compileRule(
   const raiz = nodeAt(graph, graph.root)
   if (!raiz || raiz.kind !== 'trigger') {
     throw new CompileError('Toda regra começa por um gatilho.', graph.root)
+  }
+
+  // Nó solto não tem como ser escrito: o texto de uma regra é o caminho a
+  // partir do gatilho, então compilar em silêncio jogaria o nó fora no próximo
+  // reparse. Recusar é o que faz o canvas segurá-lo como rascunho até ser
+  // ligado. (`decompileStatement` nunca produz nó solto — os casos difíceis
+  // caem em `rawStatement`, que retorna acima.)
+  const soltos = unreachableNodes(graph)
+  if (soltos.length > 0) {
+    throw new CompileError(
+      'Há um nó solto nesta regra — ligue-o ao fluxo ou apague-o.',
+      soltos[0]!,
+    )
   }
 
   const segmentos: Segmento[] = []

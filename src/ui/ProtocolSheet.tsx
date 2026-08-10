@@ -1,5 +1,6 @@
 import { stateLabel, stateSetLabel, type Program } from '../core/ast.ts'
 import { buildIndex } from '../core/validate/index.ts'
+import { suggestCounters } from '../vocab/counters.ts'
 import { createNarrator } from '../vocab/narrate.ts'
 import type { HardwareProfile } from '../vocab/profile.ts'
 import './ProtocolSheet.css'
@@ -20,6 +21,7 @@ export interface ProtocolSheetProps {
  */
 export function ProtocolSheet({ program, profile, fileName, onClose }: ProtocolSheetProps) {
   const index = buildIndex(program)
+  const counters = suggestCounters(program)
   const narrator = createNarrator(program, profile)
 
   const portas = new Set(profile.devices.map((d) => d.constante))
@@ -78,24 +80,30 @@ export function ProtocolSheet({ program, profile, fileName, onClose }: ProtocolS
           </section>
 
           <section>
-            <h2>Variáveis</h2>
-            {index.aliasOf.size === 0 ? (
-              <p className="protocol-sheet-vazio">Nenhuma variável com apelido (VAR_ALIAS) neste arquivo.</p>
+            <h2>Contadores e variáveis</h2>
+            {counters.length === 0 ? (
+              <p className="protocol-sheet-vazio">Nenhuma variável usada neste arquivo.</p>
             ) : (
               <table>
                 <thead>
                   <tr>
                     <th>Nome</th>
-                    <th>Variável</th>
+                    <th>No programa</th>
+                    <th>O programa</th>
                     <th>Vai para o arquivo de dados</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[...index.aliasOf].map(([variavel, apelido]) => (
-                    <tr key={variavel}>
-                      <td>«{apelido}»</td>
-                      <td>{variavel}</td>
-                      <td>{index.diskVars.includes(apelido) ? 'Sim' : 'Não'}</td>
+                  {counters.map((c) => (
+                    <tr key={c.operando}>
+                      <td>{c.nome === null ? <em>sem nome</em> : `«${c.nome}»`}</td>
+                      <td>{c.operando}</td>
+                      <td>{c.escrito ? 'escreve' : c.usado ? 'só lê' : 'não usa'}</td>
+                      <td>
+                        {index.diskVars.includes(c.nome ?? '') || index.diskVars.includes(c.variable)
+                          ? 'Sim'
+                          : 'Não'}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

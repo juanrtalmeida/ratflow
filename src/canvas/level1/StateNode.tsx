@@ -1,5 +1,5 @@
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react'
-import type { ProtocolNodeData } from './protocol-graph.ts'
+import { PAPEL_ICON, type ProtocolNodeData } from './protocol-graph.ts'
 import './StateNode.css'
 
 /**
@@ -17,13 +17,6 @@ export interface StateNodeData extends ProtocolNodeData {
 }
 
 export type StateNodeType = Node<StateNodeData, 'state'>
-
-const PAPEL_ICON: Record<string, string> = {
-  espera: '⏳',
-  reforco: '🍬',
-  timeout: '⏱',
-  fim: '🏁',
-}
 
 const SEVERITY_ICON: Record<string, string> = {
   error: '⛔',

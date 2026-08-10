@@ -176,7 +176,31 @@ cai no caminho cru (mesmo mecanismo do rótulo órfão da Parte 4), e o **valida
 é um erro de digitação real do laboratório, não do parser, e é exatamente o tipo de coisa que a
 validação didática existe para pegar.
 
-### 5.3 Número sem zero à esquerda (`.01`)
+### 5.3 Rótulo repetido na mesma regra
+
+`@STOP` (ou `@NOT`) uma vez por nível de `IF` aninhado é o padrão dominante nos arquivos reais —
+aparece em 12 regras das fixtures, sempre com a indentação do autor indicando qual pertence a qual
+nível:
+
+```
+.01": IF B(18) > 0 [@MORE, @STOP]
+     @MORE: SUB B(18) ---> SX
+     @STOP: OFF ^DIPPER; IF B(9) < A(8) [@ANOTHER, @STOP]
+          @ANOTHER: ---> S3
+          @STOP: ADD B(17) ---> STOPABORTFLUSH
+```
+
+A resolução é **o primeiro segmento com aquele rótulo depois do `IF` que o cita** — não um mapa por
+nome, que guardaria só a última definição, faria o `IF` de fora pular para o `@STOP` final e deixaria
+o `@STOP` do meio órfão, jogando a regra inteira no caminho cru. Até 2026-08-10 era exatamente isso
+que acontecia: o canvas mostrava um único nó "avançado" onde havia duas decisões, nove ações e três
+destinos perfeitamente editáveis.
+
+Resolver só para frente também garante que a recursão avança (índices crescentes), e mantém fora do
+modelo a corrente que volta — que dentro de uma regra do MedState não existe. Um rótulo definido
+apenas **antes** do `IF` que o cita continua caindo no cru, sem adivinhação.
+
+### 5.4 Número sem zero à esquerda (`.01`)
 
 `.01": ON^HOUSELIGHT, ...` — sem o zero antes do ponto — é o gatilho de tempo **mais comum** nas
 quatro fixtures reais (toda seção "BOX TEST" começa assim). O léxico só junta o ponto a um número

@@ -37,11 +37,8 @@
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
-  /* React Flow (minimapa e controles de zoom) usa a paleta do app em vez do
-     cinza/branco padrão da biblioteca — senão destoa nos dois temas. */
-  --xy-minimap-background-color: var(--bg-panel);
-  --xy-minimap-mask-background-color: var(--accent-bg);
-  --xy-minimap-node-background-color: var(--border-strong);
+  /* React Flow (controles de zoom) usa a paleta do app em vez do cinza/branco
+     padrão da biblioteca — senão destoa nos dois temas. */
   --xy-controls-button-background-color: var(--bg);
   --xy-controls-button-background-color-hover: var(--accent-bg);
   --xy-controls-button-color: var(--text);

@@ -53,13 +53,17 @@ export interface PulseStateSpec {
  * Escreve o estado auxiliar de um pulso. O nome amigável e a marca de macro vão
  * no mesmo comentário do cabeçalho, para que o arquivo continue autoexplicativo.
  */
-export function printPulseState(spec: PulseStateSpec, indent = '  '): string {
+export function printPulseState(
+  spec: PulseStateSpec,
+  indent = '  ',
+  newline = '\n',
+): string {
   const destino = spec.destino === 'SX' ? 'SX' : `S${spec.destino}`
   const cabecalho =
     `S${spec.index}, \\@nome: Pulso de ${spec.macro.dispositivo} ` +
     `\\@papel: reforco \\@macro: ${pulseMacroMeta(spec.macro)}`
   const regra = `${indent}${spec.macro.duracao}": OFF ${spec.macro.dispositivo} ---> ${destino}`
-  return `${cabecalho}\n${regra}`
+  return `${cabecalho}${newline}${regra}`
 }
 
 /**

@@ -3,17 +3,37 @@ import { loadFixtures } from './__fixtures.ts'
 import { applyEdits } from './edit.ts'
 import {
   createDevice,
+  deletePulseState,
+  expandPulse,
   createProcess,
   createState,
+  createTransition,
   deleteState,
+  deleteStatement,
+  insertStateInTransition,
+  insertStatement,
   renameState,
   retargetTransition,
   setCounterAlias,
   setStatePosition,
 } from './mutations.ts'
 import { parseProgram } from './parser.ts'
+import { transitionRule } from '../graph/mutate.ts'
+import { decompileStatement } from '../graph/decompile.ts'
+import { CompileError } from '../graph/compile.ts'
+import { foldablePulse } from '../graph/macros.ts'
+import { validate } from './validate/index.ts'
 
 const fixtures = loadFixtures()
+
+/** Erros (não avisos) do arquivo — a régua de "a mutação não estragou nada". */
+function erros(text: string): string[] {
+  const program = parseProgram(text)
+  return validate(program, { dialect: 'V' })
+    .filter((d) => d.severity === 'error')
+    .map((d) => d.code)
+    .sort()
+}
 
 describe('setStatePosition', () => {
   it('atualiza só a posição, preservando nome e papel', () => {
@@ -224,7 +244,293 @@ describe('setCounterAlias', () => {
   })
 })
 
+const fr5 = fixtures.find((f) => f.name === 'fr5-sintetico.MPC')!
+
+/** O estado `S<index>` do primeiro processo. */
+function estado(text: string, index: number) {
+  return parseProgram(text).stateSets[0]!.states.find((s) => s.index === index)!
+}
+
+describe('insertStatement', () => {
+  it('escreve a primeira regra de um estado que só tem cabeçalho', () => {
+    const text = 'S.S.1,\nS1,\n  #START: ---> S2\nS2, \\@nome: Vazio\n'
+    const result = applyEdits(text, insertStatement(text, estado(text, 2), transitionRule('SX')))
+
+    expect(result).toContain('S2, \\@nome: Vazio\n  5": ---> SX')
+    const reparsed = estado(result, 2)
+    expect(reparsed.statements).toHaveLength(1)
+    expect(erros(result)).toEqual(erros(text))
+  })
+
+  it('acrescenta depois da última regra, preservando a linha em branco antes do próximo estado', () => {
+    const result = applyEdits(
+      fr5.text,
+      insertStatement(fr5.text, estado(fr5.text, 2), transitionRule(4)),
+    )
+
+    // A regra nova entra depois de `30": ---> S4` e a linha em branco que
+    // separava S2 de S3 continua ali.
+    expect(result).toContain('  30": ---> S4\n  5": ---> S4\n\nS3,')
+    expect(estado(result, 2).statements).toHaveLength(3)
+  })
+
+  it('copia o recuo do arquivo em vez de impor um padrão', () => {
+    const text = 'S.S.1,\nS1,\n\t#START: ---> SX\n'
+    const result = applyEdits(text, insertStatement(text, estado(text, 1), transitionRule('SX')))
+
+    expect(result).toContain('\t#START: ---> SX\n\t5": ---> SX')
+  })
+
+  it('não empurra o comentário de fim de linha da última regra', () => {
+    const text = 'S.S.1,\nS1,\n  #START: ---> SX  \\ nota do autor\n'
+    const result = applyEdits(text, insertStatement(text, estado(text, 1), transitionRule('SX')))
+
+    expect(result).toContain('#START: ---> SX  \\ nota do autor\n')
+    expect(result).toContain('\n  5": ---> SX')
+  })
+
+  it('preserva CRLF', () => {
+    const crlf = fixtures.find((f) => f.name === 'crlf-sintetico.MPC')!
+    const state = parseProgram(crlf.text).stateSets[0]!.states[0]!
+    const result = applyEdits(crlf.text, insertStatement(crlf.text, state, transitionRule('SX')))
+
+    expect(result).not.toMatch(/[^\r]\n/)
+  })
+
+  it('funciona em arquivo sem quebra de linha no fim', () => {
+    const text = 'S.S.1,\nS1,\n  #START: ---> SX'
+    const result = applyEdits(text, insertStatement(text, estado(text, 1), transitionRule('SX')))
+
+    expect(result).toBe('S.S.1,\nS1,\n  #START: ---> SX\n  5": ---> SX')
+    expect(estado(result, 1).statements).toHaveLength(2)
+  })
+})
+
+describe('deleteStatement', () => {
+  it('remove a linha inteira, sem deixar linha em branco no lugar', () => {
+    const text = 'S.S.1,\nS1,\n  #START: ---> S2\n  30": ---> SX\n'
+    const statement = estado(text, 1).statements[1]!
+    const result = applyEdits(text, deleteStatement(text, statement))
+
+    expect(result).toBe('S.S.1,\nS1,\n  #START: ---> S2\n')
+  })
+
+  it('remove todas as linhas de uma regra com segmentos rotulados', () => {
+    // A regra do `IF` em S2 da fr5 ocupa três linhas físicas.
+    const statement = estado(fr5.text, 2).statements[0]!
+    const result = applyEdits(fr5.text, deleteStatement(fr5.text, statement))
+
+    expect(result).not.toContain('@Reforco')
+    expect(result).not.toContain('@Continua')
+    expect(result).toContain('  30": ---> S4')
+    expect(estado(result, 2).statements).toHaveLength(1)
+  })
+
+  it('apagar a última regra deixa o estado sem regras e o parser não reclama', () => {
+    const text = 'S.S.1,\nS1,\n  #START: ---> SX\nS2,\n  30": ---> SX\n'
+    const statement = estado(text, 2).statements[0]!
+    const result = applyEdits(text, deleteStatement(text, statement))
+
+    expect(estado(result, 2).statements).toHaveLength(0)
+    expect(parseProgram(result).diagnostics).toEqual(parseProgram(text).diagnostics)
+  })
+
+  it('não deixa \\r órfão num arquivo CRLF', () => {
+    const text = 'S.S.1,\r\nS1,\r\n  #START: ---> S2\r\n  30": ---> SX\r\n'
+    const statement = estado(text, 1).statements[1]!
+    const result = applyEdits(text, deleteStatement(text, statement))
+
+    expect(result).toBe('S.S.1,\r\nS1,\r\n  #START: ---> S2\r\n')
+  })
+})
+
+describe('createTransition', () => {
+  it('escreve uma regra nova apontando para o destino', () => {
+    const text = 'S.S.1,\nS1,\n  #START: ---> S2\nS2,\n  30": ---> SX\n'
+    const result = applyEdits(text, createTransition(text, estado(text, 2), 1))
+
+    expect(result).toContain('  5": ---> S1')
+    expect(erros(result)).toEqual(erros(text))
+  })
+
+  it('aponta para "fica aqui" quando o destino é SX', () => {
+    const text = 'S.S.1,\nS1,\n  #START: ---> SX\n'
+    const result = applyEdits(text, createTransition(text, estado(text, 1), 'SX'))
+
+    expect(result).toContain('  5": ---> SX')
+  })
+})
+
+describe('insertStateInTransition', () => {
+  it('põe o estado novo no meio: a origem passa a apontar para ele, e ele para o destino antigo', () => {
+    const text = 'S.S.1,\nS1,\n  #START: ---> S2\nS2,\n  30": ---> SX\n'
+    const program = parseProgram(text)
+    const stateSet = program.stateSets[0]!
+    const target = stateSet.states[0]!.statements[0]!.segments[0]!.target!
+
+    const { edits, index } = insertStateInTransition(text, stateSet, target, { papel: 'timeout' })
+    const result = applyEdits(text, edits)
+
+    expect(index).toBe(3)
+    expect(result).toContain('#START: ---> S3') // origem desviada
+    expect(result).toContain('\\@papel: timeout')
+    expect(estado(result, 3).statements).toHaveLength(1)
+    // O estado novo continua o caminho até onde a transição ia antes.
+    expect(estado(result, 3).statements[0]!.segments[0]!.target!.state).toBe(2)
+    expect(erros(result)).toEqual(erros(text))
+  })
+})
+
+describe('expandPulse', () => {
+  const base =
+    '^Alavanca = 1\n^Pelota = 2\n\nS.S.1,\nS1, \\@nome: Espera\n' +
+    '  #R^Alavanca: ADD A ---> S2\nS2, \\@nome: Fim\n  30": ---> SX\n'
+
+  /** Troca o `ADD A` da regra de S1 por um "ligar por um tempo". */
+  function comPulso(text: string, params: Record<string, string>) {
+    const state = estado(text, 1)
+    const statement = state.statements[0]!
+    const { graph } = decompileStatement(statement)
+    const acao = Object.values(graph.nodes).find((n) => n.kind === 'action')!
+    return {
+      state,
+      statement,
+      graph: {
+        ...graph,
+        nodes: { ...graph.nodes, [acao.id]: { ...acao, spec: 'pulsar', params } },
+      },
+      pulsoId: acao.id,
+    }
+  }
+
+  it('cria o estado auxiliar marcado e aponta a regra para ele', () => {
+    const stateSet = parseProgram(base).stateSets[0]!
+    const { state, statement, graph, pulsoId } = comPulso(base, {
+      dispositivo: '^Pelota',
+      duracao: '0.05',
+    })
+
+    const { edits, index } = expandPulse(base, stateSet, state, statement, graph, pulsoId)
+    const result = applyEdits(base, edits)
+
+    expect(index).toBe(3)
+    expect(result).toContain('#R^Alavanca: ON ^Pelota ---> S3') // a regra desvia para o auxiliar
+    const aux = estado(result, 3)
+    expect(foldablePulse(aux)).toEqual({ dispositivo: '^Pelota', duracao: '0.05' })
+    // O auxiliar continua o caminho até onde a regra ia antes.
+    expect(aux.statements[0]!.segments[0]!.target!.state).toBe(2)
+    expect(erros(result)).toEqual(erros(base))
+  })
+
+  it('destino SX faz o auxiliar voltar ao próprio estado', () => {
+    const text = '^Alavanca = 1\n^Pelota = 2\n\nS.S.1,\nS1,\n  #R^Alavanca: ADD A ---> SX\n'
+    const stateSet = parseProgram(text).stateSets[0]!
+    const { state, statement, graph, pulsoId } = comPulso(text, {
+      dispositivo: '^Pelota',
+      duracao: '0.05',
+    })
+
+    const result = applyEdits(text, expandPulse(text, stateSet, state, statement, graph, pulsoId).edits)
+    expect(estado(result, 2).statements[0]!.segments[0]!.target!.state).toBe(1)
+  })
+
+  it('as duas edições convivem no mesmo lote, mesmo sem quebra de linha no fim', () => {
+    // Aqui a âncora da regra e a do estado auxiliar coincidem — duas inserções
+    // puras no mesmo offset seriam recusadas pelo lote.
+    const text = '^Alavanca = 1\n^Pelota = 2\n\nS.S.1,\nS1,\n  #R^Alavanca: ADD A ---> SX'
+    const stateSet = parseProgram(text).stateSets[0]!
+    const { state, statement, graph, pulsoId } = comPulso(text, {
+      dispositivo: '^Pelota',
+      duracao: '0.05',
+    })
+
+    const edits = expandPulse(text, stateSet, state, statement, graph, pulsoId).edits
+    expect(() => applyEdits(text, edits)).not.toThrow()
+  })
+
+  it('recusa quando falta preencher o pulso, quando é em minutos, ou quando há decisão no caminho', () => {
+    const stateSet = parseProgram(base).stateSets[0]!
+    const vazio = comPulso(base, { duracao: '0.05' })
+    expect(() =>
+      expandPulse(base, stateSet, vazio.state, vazio.statement, vazio.graph, vazio.pulsoId),
+    ).toThrow(CompileError)
+
+    const minutos = comPulso(base, { dispositivo: '^Pelota', duracao: '2', unidade: 'min' })
+    expect(() =>
+      expandPulse(base, stateSet, minutos.state, minutos.statement, minutos.graph, minutos.pulsoId),
+    ).toThrow(/segundos/)
+
+    // Decisão entre o pulso e o destino: cada ramo exigiria seu próprio auxiliar.
+    const comIf = comPulso(base, { dispositivo: '^Pelota', duracao: '0.05' })
+    const decisao = {
+      kind: 'decision' as const,
+      id: 'd9',
+      left: 'A',
+      operator: '>=',
+      right: '5',
+      whenTrue: null,
+      whenFalse: null,
+    }
+    const grafoComIf = {
+      ...comIf.graph,
+      nodes: {
+        ...comIf.graph.nodes,
+        d9: decisao,
+        [comIf.pulsoId]: { ...comIf.graph.nodes[comIf.pulsoId]!, next: 'd9' },
+      },
+    }
+    expect(() =>
+      expandPulse(base, stateSet, comIf.state, comIf.statement, grafoComIf, comIf.pulsoId),
+    ).toThrow(/decisão/)
+  })
+})
+
+describe('deletePulseState', () => {
+  it('religa quem apontava para o auxiliar e o apaga', () => {
+    const text =
+      '^Pelota = 2\n\nS.S.1,\nS1,\n  #START: ON ^Pelota ---> S2\n' +
+      'S2, \\@macro: pulso ^Pelota 0.05\n  0.05": OFF ^Pelota ---> S3\nS3,\n  30": ---> S1\n'
+    const stateSet = parseProgram(text).stateSets[0]!
+    const aux = estado(text, 2)
+
+    const result = applyEdits(text, deletePulseState(stateSet, aux)!)
+    expect(result).toContain('#START: ON ^Pelota ---> S3')
+    expect(estado(result, 3)).toBeTruthy()
+    expect(parseProgram(result).stateSets[0]!.states.map((s) => s.index)).toEqual([1, 3])
+    expect(erros(result)).toEqual(erros(text))
+  })
+
+  it('devolve null quando o auxiliar foi editado à mão', () => {
+    const text =
+      'S.S.1,\nS1,\n  #START: ON ^Pelota ---> S2\n' +
+      'S2, \\@macro: pulso ^Pelota 0.05\n  0.05": OFF ^Outro ---> S1\n'
+    const stateSet = parseProgram(text).stateSets[0]!
+    expect(deletePulseState(stateSet, estado(text, 2))).toBeNull()
+  })
+})
+
 describe('propriedade: mutações não corrompem nenhuma fixture', () => {
+  it.each(fixtures)('$name: inserir uma regra e apagá-la devolve o arquivo idêntico', ({ text }) => {
+    const state = parseProgram(text).stateSets[0]?.states[0]
+    if (!state) return
+
+    const comRegra = applyEdits(text, insertStatement(text, state, transitionRule('SX')))
+    const nova = parseProgram(comRegra).stateSets[0]!.states[0]!
+    const ultima = nova.statements[nova.statements.length - 1]!
+
+    expect(applyEdits(comRegra, deleteStatement(comRegra, ultima))).toBe(text)
+  })
+
+  it.each(fixtures)('$name: inserir uma regra não cria erro de validação novo', ({ text }) => {
+    const state = parseProgram(text).stateSets[0]?.states[0]
+    if (!state) return
+
+    const comRegra = applyEdits(text, insertStatement(text, state, transitionRule('SX')))
+    expect(erros(comRegra)).toEqual(erros(text))
+  })
+})
+
+describe('propriedade: mutações antigas não corrompem nenhuma fixture', () => {
   it.each(fixtures)('$name: mover, renomear e excluir um estado real continuam válidos', ({ text }) => {
     const program = parseProgram(text)
     const stateSet = program.stateSets[0]

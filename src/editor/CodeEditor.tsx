@@ -11,7 +11,7 @@ import {
 } from '@codemirror/view'
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 import type { Span } from '../core/tokens.ts'
-import type { TextEdit } from '../core/edit.ts'
+import { applyEdits as conferirLote, type TextEdit } from '../core/edit.ts'
 import type { DialectId } from '../core/validate/index.ts'
 import { medstateComplete } from './medstate-complete.ts'
 import { medstateHighlight } from './medstate-highlight.ts'
@@ -104,6 +104,19 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function
       applyEdits(edits) {
         const view = viewRef.current
         if (!view || edits.length === 0) return
+        try {
+          // Confere o lote contra o documento **atual** antes de despachar.
+          // `applyEdits` recusa spans sobrepostos, duas inserções no mesmo
+          // offset e span fora do texto — defeitos que corromperiam o arquivo
+          // em silêncio. Conferir aqui (e não no App) pega também span
+          // obsoleto: uma AST do canvas atrasada em relação ao documento.
+          // ponytail: reconstrói o texto só para conferir; irrelevante em
+          // `.MPC` de dezenas de KB, virar checagem só dos spans se doer.
+          conferirLote(view.state.doc.toString(), edits)
+        } catch (error) {
+          console.error('Lote de edições rejeitado, texto intacto:', error)
+          return
+        }
         view.dispatch({
           changes: edits.map((e) => ({ from: e.span[0], to: e.span[1], insert: e.newText })),
         })

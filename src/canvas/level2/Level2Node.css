@@ -84,3 +84,22 @@
 .l2-node-decision-handle-label--false {
   color: var(--error);
 }
+
+/* Nó que ainda não deixa a regra ser escrita: falta preencher um campo, ou ele
+   está solto no canvas. O `title` do card traz o motivo em palavras. */
+.l2-node--incompleto {
+  /* `position: relative` e o ⚠ para dentro: `.l2-node` tem `overflow: hidden`,
+     então um badge estourando a borda seria cortado. */
+  position: relative;
+  border-color: var(--warn);
+  border-style: dashed;
+}
+
+.l2-node--incompleto::after {
+  content: '⚠';
+  position: absolute;
+  top: 5px;
+  right: 7px;
+  font-size: 13px;
+  line-height: 1;
+}

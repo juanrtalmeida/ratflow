@@ -58,3 +58,44 @@
   color: var(--text-muted);
   font-style: italic;
 }
+
+/* Fio sob o ponteiro durante um arrasto da paleta: solte aqui para entrar no
+   meio da corrente. */
+.fio-alvo .react-flow__edge-path {
+  stroke: var(--accent) !important;
+  stroke-width: 5 !important;
+}
+
+.logic-canvas-pendencias {
+  border: 1px solid var(--warn);
+  border-radius: var(--radius-sm);
+  background: var(--bg-panel);
+  padding: 8px 10px;
+  margin-bottom: 14px;
+}
+
+.logic-canvas-pendencias h3 {
+  margin-top: 0;
+}
+
+.logic-canvas-pendencias ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+}
+
+.logic-canvas-pendencias li + li {
+  margin-top: 4px;
+}
+
+.logic-canvas-motivo {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: var(--warn);
+}
+
+.logic-canvas-pendencias-nota {
+  margin: 8px 0 0;
+  font-size: 11px;
+  color: var(--text-muted);
+}

@@ -7,3 +7,18 @@
 .protocol-canvas .react-flow__minimap {
   border-radius: var(--radius);
 }
+
+/* Fio sob o ponteiro durante um arrasto da paleta: solte aqui para entrar no
+   meio desta transição. `!important` porque `TransitionEdge` escreve
+   `strokeWidth` inline no `BaseEdge` — a alternativa (passar um flag pelos
+   dados da aresta) reconstruiria todas as arestas a cada `dragover`.
+   ponytail: se o inline sair de lá algum dia, tirar o !important daqui. */
+.fio-alvo .react-flow__edge-path {
+  stroke: var(--accent) !important;
+  stroke-width: 5 !important;
+}
+
+.fio-alvo .react-flow__edge-interaction {
+  stroke: var(--accent);
+  stroke-opacity: 0.2;
+}
