@@ -1,8 +1,4 @@
 .app {
-  /* Altura reservada pelos painéis opacos (paleta, código) para não ficarem
-     atrás da barra flutuante. Só o canvas sobe por trás dela. */
-  --barra-altura: 40px;
-
   position: relative;
   display: flex;
   flex-direction: column;
@@ -10,38 +6,22 @@
   min-height: 0;
 }
 
-/* A barra flutua sobre o canvas, sem fundo nem borda: o grafo sobe por trás
-   dela. `pointer-events: none` na faixa e `auto` nos controles é o que mantém
-   o canvas clicável e arrastável embaixo — sem isso, uma tira do topo do
-   protocolo ficaria morta ao toque. */
+/* Faixa própria, opaca, no fluxo da coluna. Antes ela flutuava por cima de
+   tudo (`position: absolute` + `pointer-events: none`) para o canvas subir por
+   trás — mas a paleta e os painéis laterais são opacos e começam no mesmo
+   topo, então o ☰, a marca e o seletor de processo caíam em cima da barra
+   lateral, e o conteúdo dela passava por trás deles ao rolar. Os ~34px que a
+   barra custa já eram reservados por `padding-top` em cada painel de qualquer
+   jeito. */
 .app-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  flex: none;
   z-index: 5;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 14px;
-  background: transparent;
-  pointer-events: none;
-}
-
-.app-bar > * {
-  pointer-events: auto;
-}
-
-/* Texto não precisa capturar clique: devolver essa área ao canvas é o que faz
-   a barra flutuante custar quase nada em espaço útil. */
-.app-bar-brand,
-.app-bar-sub {
-  pointer-events: none;
-}
-
-.app-bar-sub button,
-.app-bar-sub select {
-  pointer-events: auto;
+  padding: 6px 12px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
 }
 
 .app-bar-menu {
@@ -172,16 +152,32 @@
   display: flex;
 }
 
+/* A largura vem por `style` inline, do estado do App: é ela que o splitter
+   arrasta. Sem `min-width`/`max-width` aqui — o limite mora no `clamp` do
+   arrasto, senão o CSS ganharia da largura arrastada. */
 .app-code-area {
   flex: none;
-  width: 45%;
-  min-width: 320px;
-  max-width: 720px;
   border-left: 1px solid var(--border);
-  /* Reserva a faixa da barra flutuante: o editor e o simulador são opacos e
-     ficariam por baixo dela. */
-  padding-top: var(--barra-altura);
   background: var(--bg);
+}
+
+/* Alça de redimensionar: uma tira fina entre o canvas e o painel. Larga o
+   bastante para o ponteiro acertar (6px), sem desenhar nada até o hover. */
+.app-splitter {
+  flex: none;
+  width: 6px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: col-resize;
+  /* Sem isso, arrastar num touchscreen rola a página em vez de mover a alça. */
+  touch-action: none;
+}
+
+.app-splitter:hover,
+.app-splitter:focus-visible {
+  background: var(--accent-border);
+  outline: none;
 }
 
 .app-code-area--escondida {

@@ -16,6 +16,7 @@ export interface ActionsDrawerProps {
   readonly onExportSvg: () => void
   readonly onProtocolSheet: () => void
   readonly onManual: () => void
+  readonly onLinguagem: () => void
   readonly onGlossary: () => void
   readonly onTour: () => void
 }
@@ -42,6 +43,7 @@ export function ActionsDrawer({
   onExportSvg,
   onProtocolSheet,
   onManual,
+  onLinguagem,
   onGlossary,
   onTour,
 }: ActionsDrawerProps) {
@@ -125,6 +127,9 @@ export function ActionsDrawer({
           <h3>Ajuda</h3>
           <button type="button" onClick={run(onManual)}>
             📖 Manual — todas as funções
+          </button>
+          <button type="button" onClick={run(onLinguagem)}>
+            📘 A linguagem MED-PC — sintaxe e padrões
           </button>
           <button type="button" onClick={run(onGlossary)}>
             ❓ Glossário

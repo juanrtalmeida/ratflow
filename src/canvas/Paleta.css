@@ -2,8 +2,7 @@
   flex: none;
   width: 216px;
   overflow-y: auto;
-  /* O topo reserva a faixa da barra flutuante — só o canvas passa por trás dela. */
-  padding: calc(var(--barra-altura, 40px) + 6px) 12px 24px;
+  padding: 12px 12px 24px;
   border-right: 1px solid var(--border);
   background: var(--bg-panel);
   display: flex;
@@ -14,7 +13,7 @@
 /* Recolhida: só a aba de reabrir, para o canvas ficar limpo. */
 .paleta--fechada {
   width: auto;
-  padding: calc(var(--barra-altura, 40px) + 6px) 4px 8px;
+  padding: 12px 4px 8px;
   gap: 0;
 }
 

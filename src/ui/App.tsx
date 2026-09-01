@@ -48,6 +48,13 @@ import './App.css'
 const DIALECT = 'V' as const
 const AUTOSAVE_DEBOUNCE_MS = 800
 
+/** Largura do painel lateral: chave no `localStorage`, padrão e limites (px). */
+const LARGURA_CHAVE = 'ratflow.larguraPainel'
+const LARGURA_PADRAO = 520
+const LARGURA_MIN = 280
+/** O canvas nunca fica menor que isto — a paleta sozinha já ocupa 216px. */
+const CANVAS_MIN = 260
+
 /**
  * Ações escondidas da paleta. Vazio hoje: "ligar por um tempo" já escreve o
  * estado auxiliar com o `OFF` (ver `expandPulse`). Fica como o lugar óbvio
@@ -86,6 +93,9 @@ export function App() {
   const [showGlossary, setShowGlossary] = useState(false)
   const [tourStep, setTourStep] = useState<number | null>(null)
   const [showDrawer, setShowDrawer] = useState(false)
+  const [larguraPainel, setLarguraPainel] = useState(
+    () => Number(localStorage.getItem(LARGURA_CHAVE)) || LARGURA_PADRAO,
+  )
 
   useEffect(() => {
     let cancelado = false
@@ -376,6 +386,37 @@ export function App() {
     }
   }
 
+  // Redimensionar o painel lateral. `setPointerCapture` é o que faz o arrasto
+  // continuar valendo quando o ponteiro passa por cima do canvas ou do editor
+  // — sem ele, um `mousemove` sobre o CodeMirror seria engolido por ele.
+  const limitar = (px: number) =>
+    Math.min(Math.max(px, LARGURA_MIN), Math.max(LARGURA_MIN, window.innerWidth - CANVAS_MIN))
+
+  const guardarLargura = (px: number) => {
+    setLarguraPainel(px)
+    localStorage.setItem(LARGURA_CHAVE, String(px))
+  }
+
+  // Limitar na renderização, e não só no arrasto: encolher a janela depois de
+  // ter arrastado o painel para bem largo deixaria o canvas sem espaço nenhum.
+  const largura = limitar(larguraPainel)
+
+  const aoArrastarSplitter = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.buttons === 0) return
+    setLarguraPainel(limitar(window.innerWidth - e.clientX))
+  }
+
+  // Teclado também move a alça: uma barra de redimensionar que só responde ao
+  // ponteiro é inacessível para quem navega por Tab.
+  const aoTeclarSplitter = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const passo = e.shiftKey ? 64 : 16
+    if (e.key === 'ArrowLeft') guardarLargura(limitar(largura + passo))
+    else if (e.key === 'ArrowRight') guardarLargura(limitar(largura - passo))
+    else if (e.key === 'Home') guardarLargura(LARGURA_PADRAO)
+    else return
+    e.preventDefault()
+  }
+
   if (text === null) {
     return (
       <div className="app">
@@ -473,6 +514,7 @@ export function App() {
         onExportSvg={handleExportSvg}
         onProtocolSheet={() => setShowProtocolSheet(true)}
         onManual={() => irPara('manual')}
+        onLinguagem={() => irPara('linguagem')}
         onGlossary={() => {
           setGlossaryFocus(null)
           setShowGlossary(true)
@@ -539,7 +581,27 @@ export function App() {
           )}
         </div>
 
-        <div className={`app-code-area${sidePanel === 'code' ? '' : ' app-code-area--escondida'}`}>
+        {sidePanel !== 'none' && (
+          <div
+            className="app-splitter"
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Redimensionar o painel lateral"
+            aria-valuenow={Math.round(largura)}
+            tabIndex={0}
+            title="Arraste para aumentar ou diminuir o painel"
+            onPointerDown={(e) => e.currentTarget.setPointerCapture(e.pointerId)}
+            onPointerMove={aoArrastarSplitter}
+            onPointerUp={() => guardarLargura(largura)}
+            onDoubleClick={() => guardarLargura(LARGURA_PADRAO)}
+            onKeyDown={aoTeclarSplitter}
+          />
+        )}
+
+        <div
+          className={`app-code-area${sidePanel === 'code' ? '' : ' app-code-area--escondida'}`}
+          style={{ width: largura }}
+        >
           <CodeEditor
             ref={codeEditorRef}
             initialText={text}
@@ -550,7 +612,7 @@ export function App() {
         </div>
 
         {sidePanel === 'simulator' && (
-          <div className="app-code-area">
+          <div className="app-code-area" style={{ width: largura }}>
             <SimulatorPanel
               program={program}
               profile={profile}

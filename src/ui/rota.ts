@@ -11,10 +11,14 @@ import { useEffect, useState } from 'react'
  * disso.
  */
 
-export type Rota = 'editor' | 'manual'
+export type Rota = 'editor' | 'manual' | 'linguagem'
+
+/** Toda rota que não é o editor. O editor é o que sobra. */
+const PAGINAS: readonly string[] = ['manual', 'linguagem']
 
 function rotaAtual(): Rota {
-  return window.location.hash.replace(/^#\/?/, '') === 'manual' ? 'manual' : 'editor'
+  const hash = window.location.hash.replace(/^#\/?/, '')
+  return PAGINAS.includes(hash) ? (hash as Rota) : 'editor'
 }
 
 export function useRota(): Rota {

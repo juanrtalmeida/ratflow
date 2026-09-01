@@ -1,21 +1,30 @@
 import { useEffect, useRef, useState } from 'react'
-import { MANUAL, type ManualBloco } from './manual-conteudo.ts'
+import type { ManualBloco, ManualSecao } from './manual-conteudo.ts'
 import { irPara } from './rota.ts'
 import './Manual.css'
 
+export interface ManualProps {
+  /** Vai no `<h1>` e no título da aba. */
+  readonly titulo: string
+  readonly secoes: readonly ManualSecao[]
+}
+
 /**
- * Manual do sistema: o que existe e como usar. É uma **página** na rota
- * `#/manual`, não um modal — tem URL própria, entra no histórico, sobrevive a um
- * recarregar e não fecha por clique acidental fora.
+ * Página de documentação: sumário à esquerda, texto à direita. É uma
+ * **página** com rota própria (`#/manual`, `#/linguagem`), não um modal — tem
+ * URL, entra no histórico, sobrevive a um recarregar e não fecha por clique
+ * acidental fora.
  *
- * O editor continua montado por trás: navegar para o manual e voltar não
- * remonta o canvas nem o editor de código, e portanto não corre o risco de
- * perder uma edição que o autosave ainda não gravou.
+ * O editor continua montado por trás: navegar para cá e voltar não remonta o
+ * canvas nem o editor de código, e portanto não corre o risco de perder uma
+ * edição que o autosave ainda não gravou.
  *
- * O conteúdo mora em `manual-conteudo.ts`; aqui só a apresentação.
+ * O conteúdo mora em `manual-conteudo.ts` e `linguagem-conteudo.ts`; aqui só a
+ * apresentação — um componente para as duas páginas, porque o que muda entre
+ * elas é o texto, não o comportamento.
  */
-export function Manual() {
-  const [ativa, setAtiva] = useState(MANUAL[0]!.id)
+export function Manual({ titulo, secoes }: ManualProps) {
+  const [ativa, setAtiva] = useState(secoes[0]!.id)
   const corpoRef = useRef<HTMLDivElement>(null)
   const secaoRefs = useRef<Record<string, HTMLElement | null>>({})
 
@@ -23,11 +32,11 @@ export function Manual() {
   // favoritos e o histórico do navegador dizerem o que é.
   useEffect(() => {
     const anterior = document.title
-    document.title = 'Manual · RatFlow'
+    document.title = `${titulo} · RatFlow`
     return () => {
       document.title = anterior
     }
-  }, [])
+  }, [titulo])
 
   useEffect(() => {
     const aoTeclar = (e: KeyboardEvent) => {
@@ -50,7 +59,7 @@ export function Manual() {
     )
     for (const alvo of alvos) observer.observe(alvo)
     return () => observer.disconnect()
-  }, [])
+  }, [secoes])
 
   return (
     <div className="manual-page">
@@ -66,12 +75,12 @@ export function Manual() {
           >
             ← Voltar ao editor
           </a>
-          <h1>Manual do RatFlow</h1>
+          <h1>{titulo}</h1>
         </header>
 
         <div className="manual-corpo">
           <nav className="manual-sumario" aria-label="Seções do manual">
-            {MANUAL.map((secao) => (
+            {secoes.map((secao) => (
               <a
                 key={secao.id}
                 href={`#${secao.id}`}
@@ -88,7 +97,7 @@ export function Manual() {
           </nav>
 
           <article className="manual-texto" ref={corpoRef}>
-            {MANUAL.map((secao) => (
+            {secoes.map((secao) => (
               <section
                 key={secao.id}
                 id={secao.id}
