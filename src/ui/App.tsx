@@ -531,9 +531,7 @@ export function App() {
         onExportPng={handleExportPng}
         onExportSvg={handleExportSvg}
         onProtocolSheet={() => setShowProtocolSheet(true)}
-        onManual={() => irPara('manual')}
-        onLinguagem={() => irPara('linguagem')}
-        onGlossary={() => irPara('glossario')}
+        onGuia={irPara}
         onTour={() => setTourStep(0)}
       />
 

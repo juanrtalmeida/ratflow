@@ -4,12 +4,14 @@
  * reaproveita: `entre backticks` vira código e `**negrito**` vira negrito, e
  * nada mais.
  *
- * Divisão de trabalho entre as duas páginas de documentação:
+ * Divisão de trabalho entre as páginas de documentação:
  *
  * - `manual-conteudo.ts` explica **o RatFlow** — onde clicar, o que cada
  *   painel faz, quais os limites do editor;
  * - este arquivo explica **a linguagem** — o que o MED-PC executa, com que
- *   sintaxe, e como os programas de laboratório de verdade são escritos.
+ *   sintaxe, e como os programas de laboratório de verdade são escritos;
+ * - `estilo-conteudo.ts` explica **como escrever** — nome, ordem, comentário e
+ *   estrutura, o que é escolha de quem escreve e não mecânica da linguagem.
  *
  * A fonte do que está aqui é o que o parser em `src/core/` reconhece (ver
  * `src/core/GRAMMAR.md`), a ajuda de comando em `src/editor/command-help.ts`,

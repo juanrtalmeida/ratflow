@@ -1,16 +1,7 @@
 import { App } from './App.tsx'
-import { GLOSSARIO } from './glossario-conteudo.ts'
-import { LINGUAGEM } from './linguagem-conteudo.ts'
+import { SECOES } from './guias.ts'
 import { Manual } from './Manual.tsx'
-import { MANUAL, type ManualSecao } from './manual-conteudo.ts'
-import { GUIAS, type RotaGuia, useRota } from './rota.ts'
-
-/** O texto de cada guia. Os rótulos e a ordem vivem em `GUIAS` (`rota.ts`). */
-const SECOES: Record<RotaGuia, readonly ManualSecao[]> = {
-  manual: MANUAL,
-  linguagem: LINGUAGEM,
-  glossario: GLOSSARIO,
-}
+import { GUIAS, useLocal } from './rota.ts'
 
 /**
  * As rotas do app. O editor está sempre montado — as páginas de documentação
@@ -20,7 +11,7 @@ const SECOES: Record<RotaGuia, readonly ManualSecao[]> = {
  * gravado.
  */
 export function Raiz() {
-  const rota = useRota()
+  const { rota, secao, termo } = useLocal()
   const guia = GUIAS.find((g) => g.rota === rota)
 
   return (
@@ -28,7 +19,15 @@ export function Raiz() {
       <App />
       {/* `key` por guia: trocar de guia começa a leitura do topo, com o sumário
           apontando a primeira seção, em vez de herdar a rolagem do anterior. */}
-      {guia && <Manual key={guia.rota} guia={guia} secoes={SECOES[guia.rota]} />}
+      {guia && (
+        <Manual
+          key={guia.rota}
+          guia={guia}
+          secoes={SECOES[guia.rota]}
+          secaoAlvo={secao}
+          termoAlvo={termo}
+        />
+      )}
     </>
   )
 }

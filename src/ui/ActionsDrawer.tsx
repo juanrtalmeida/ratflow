@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { GUIAS, type RotaGuia } from './rota.ts'
 import './ActionsDrawer.css'
 
 export interface ActionsDrawerProps {
@@ -15,9 +16,8 @@ export interface ActionsDrawerProps {
   readonly onExportPng: () => void
   readonly onExportSvg: () => void
   readonly onProtocolSheet: () => void
-  readonly onManual: () => void
-  readonly onLinguagem: () => void
-  readonly onGlossary: () => void
+  /** Abre um guia da documentação. A lista sai de `GUIAS` (`rota.ts`). */
+  readonly onGuia: (rota: RotaGuia) => void
   readonly onTour: () => void
 }
 
@@ -42,9 +42,7 @@ export function ActionsDrawer({
   onExportPng,
   onExportSvg,
   onProtocolSheet,
-  onManual,
-  onLinguagem,
-  onGlossary,
+  onGuia,
   onTour,
 }: ActionsDrawerProps) {
   useEffect(() => {
@@ -125,15 +123,16 @@ export function ActionsDrawer({
 
         <section className="actions-drawer-secao">
           <h3>Ajuda</h3>
-          <button type="button" onClick={run(onManual)}>
-            📖 Manual — todas as funções
-          </button>
-          <button type="button" onClick={run(onLinguagem)}>
-            📘 A linguagem MED-PC — sintaxe e padrões
-          </button>
-          <button type="button" onClick={run(onGlossary)}>
-            ❓ Glossário — termos do laboratório
-          </button>
+          {GUIAS.map((g) => (
+            <button
+              key={g.rota}
+              type="button"
+              onClick={run(() => onGuia(g.rota))}
+              title={g.descricao}
+            >
+              {g.icone} {g.titulo}
+            </button>
+          ))}
           <button type="button" onClick={run(onTour)}>
             🎓 Tour de primeiros passos
           </button>

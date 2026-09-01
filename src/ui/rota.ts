@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react'
  * disso.
  */
 
-export type Rota = 'editor' | 'manual' | 'linguagem' | 'glossario'
+export type Rota = 'editor' | 'manual' | 'linguagem' | 'estilo' | 'glossario'
 
 /** Toda rota que não é o editor. O editor é o que sobra. */
 export type RotaGuia = Exclude<Rota, 'editor'>
@@ -28,9 +28,9 @@ export interface Guia {
 }
 
 /**
- * Os três guias, em ordem de leitura. É esta lista que desenha as abas de
- * troca rápida, o rodapé "próximo guia" e os atalhos `1`–`3`: acrescentar um
- * guia aqui basta para ele aparecer nos três lugares.
+ * Os guias, em ordem de leitura. É esta lista que desenha as abas de troca
+ * rápida, o rodapé "próximo guia" e os atalhos numéricos: acrescentar um guia
+ * aqui basta para ele aparecer nos três lugares — e a busca o indexa junto.
  */
 export const GUIAS: readonly Guia[] = [
   {
@@ -48,6 +48,14 @@ export const GUIAS: readonly Guia[] = [
     descricao: 'A linguagem: como um programa MedState roda, a sintaxe, os padrões e as armadilhas.',
   },
   {
+    rota: 'estilo',
+    rotulo: 'Estilo',
+    icone: '✍️',
+    titulo: 'Estilo e estrutura',
+    descricao:
+      'A escrita: como nomear, organizar e comentar um `.MPC` que outra pessoa consiga ler e ajustar.',
+  },
+  {
     rota: 'glossario',
     rotulo: 'Glossário',
     icone: '📖',
@@ -56,24 +64,55 @@ export const GUIAS: readonly Guia[] = [
   },
 ]
 
-function rotaAtual(): Rota {
-  const hash = window.location.hash.replace(/^#\/?/, '')
-  return GUIAS.some((g) => g.rota === hash) ? (hash as Rota) : 'editor'
+/**
+ * Onde se está: a rota, a seção pedida e o termo a destacar —
+ * `#/manual/atalhos/salvar`.
+ */
+export interface Local {
+  readonly rota: Rota
+  /** `id` da seção a mostrar. Ausente = comece do topo do guia. */
+  readonly secao?: string
+  /** Consulta de busca a destacar no texto. Ausente = nada em destaque. */
+  readonly termo?: string
 }
 
-export function useRota(): Rota {
-  const [rota, setRota] = useState(rotaAtual)
+function localAtual(): Local {
+  const [rota, secao, termo] = window.location.hash.replace(/^#\/?/, '').split('/')
+  if (!GUIAS.some((g) => g.rota === rota)) return { rota: 'editor' }
+  return {
+    rota: rota as Rota,
+    secao: secao || undefined,
+    // Um termo com acento, espaço ou barra chega aqui percentual-codificado.
+    termo: termo ? decodeURIComponent(termo) : undefined,
+  }
+}
+
+export function useLocal(): Local {
+  const [local, setLocal] = useState(localAtual)
 
   useEffect(() => {
-    const aoTrocar = () => setRota(rotaAtual())
+    const aoTrocar = () => setLocal(localAtual())
     window.addEventListener('hashchange', aoTrocar)
     return () => window.removeEventListener('hashchange', aoTrocar)
   }, [])
 
-  return rota
+  return local
 }
 
-/** Navega — entra no histórico, então o botão voltar desfaz. */
-export function irPara(rota: Rota): void {
-  window.location.hash = rota === 'editor' ? '' : `#/${rota}`
+/**
+ * Navega — entra no histórico, então o botão voltar desfaz.
+ *
+ * A seção e o termo buscado vão na própria URL em vez de num estado à parte: o
+ * link de um resultado de busca pode ser copiado, recarregado e favoritado, e
+ * cai exatamente no mesmo parágrafo, com a palavra já destacada.
+ */
+export function irPara(rota: Rota, secao?: string, termo?: string): void {
+  if (rota === 'editor') {
+    window.location.hash = ''
+    return
+  }
+  // O termo é o terceiro segmento: sem seção não há onde encaixá-lo, e
+  // `#/manual/salvar` seria lido como um `id` de seção.
+  const alvo = secao ? `/${secao}${termo ? `/${encodeURIComponent(termo)}` : ''}` : ''
+  window.location.hash = `#/${rota}${alvo}`
 }

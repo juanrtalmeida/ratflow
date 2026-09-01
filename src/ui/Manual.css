@@ -68,7 +68,7 @@
   color: var(--text-muted);
 }
 
-/* Controle segmentado: os três guias sempre visíveis, o de agora em relevo.
+/* Controle segmentado: todos os guias sempre visíveis, o de agora em relevo.
    Uma aba escondida atrás de um menu não é troca rápida. */
 .manual-abas {
   display: flex;
@@ -105,6 +105,174 @@
   color: var(--text-h);
   font-weight: 600;
   box-shadow: var(--shadow-sm);
+}
+
+/* ---- Busca -------------------------------------------------------------- */
+
+/* No meio do cabeçalho, entre sair e trocar de guia: é o caminho mais curto
+   até uma resposta quando não se sabe em qual dos guias ela está. */
+.manual-busca {
+  position: relative;
+  flex: 1;
+  max-width: 460px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-panel);
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.manual-busca:focus-within {
+  border-color: var(--accent-border);
+  background: var(--bg);
+}
+
+.manual-busca-lupa {
+  flex: none;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--text-muted);
+}
+
+.manual-busca-campo {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--text);
+  outline: none;
+}
+
+.manual-busca-campo::placeholder {
+  color: var(--text-muted);
+}
+
+/* O `x` nativo do `type=search` duplica o Esc e desalinha a pílula. */
+.manual-busca-campo::-webkit-search-cancel-button {
+  display: none;
+}
+
+.manual-busca-tecla {
+  flex: none;
+  font: 500 10px/1.7 var(--sans);
+  letter-spacing: 0.04em;
+  padding: 0 5px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+}
+
+.manual-busca-resultados {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: min(62vh, 520px);
+  overflow-y: auto;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  box-shadow: var(--shadow);
+}
+
+.manual-busca-vazio {
+  margin: 0;
+  padding: 12px 10px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.manual-busca-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.manual-busca-item--sel {
+  background: var(--accent-bg);
+}
+
+.manual-busca-item-topo {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+
+.manual-busca-item-titulo {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-h);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* De qual guia veio o resultado — a busca atravessa os três. */
+.manual-busca-item-guia {
+  flex: none;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Duas linhas de contexto: o bastante para reconhecer o trecho certo sem a
+   lista virar uma parede de texto. */
+.manual-busca-item-trecho {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.manual-busca-item mark {
+  padding: 0 1px;
+  border-radius: 2px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* O termo buscado, destacado no texto da página. `::highlight()` pinta os
+   `Range`s registrados em `CSS.highlights` sem que exista elemento nenhum em
+   volta — por isso só aceita cor, fundo, sombra e decoração de texto, e é
+   justamente por isso que serve: não mexe no layout de uma linha sequer. */
+::highlight(manual-realce) {
+  background-color: var(--accent-bg);
+  color: var(--accent);
+}
+
+/* Em tela estreita o cabeçalho já está apertado: a busca continua, a dica de
+   atalho sai. */
+@media (max-width: 860px) {
+  .manual-busca-tecla {
+    display: none;
+  }
 }
 
 /* ---- Identidade do guia ------------------------------------------------- */

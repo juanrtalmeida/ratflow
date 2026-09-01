@@ -1,15 +1,17 @@
 import { describe, expect, it } from 'vitest'
+import { ESTILO } from './estilo-conteudo.ts'
 import { GLOSSARIO } from './glossario-conteudo.ts'
 import { LINGUAGEM } from './linguagem-conteudo.ts'
 import { MANUAL, type ManualSecao } from './manual-conteudo.ts'
 
 /**
- * As duas páginas de documentação passam pelas mesmas checagens: o componente
+ * Todas as páginas de documentação passam pelas mesmas checagens: o componente
  * `Manual` é um só, então a convenção de marcação também é.
  */
 const PAGINAS: readonly { nome: string; secoes: readonly ManualSecao[] }[] = [
   { nome: 'manual', secoes: MANUAL },
   { nome: 'linguagem', secoes: LINGUAGEM },
+  { nome: 'estilo', secoes: ESTILO },
   { nome: 'glossario', secoes: GLOSSARIO },
 ]
 
