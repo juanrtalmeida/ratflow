@@ -11,10 +11,10 @@ import { useEffect, useState } from 'react'
  * disso.
  */
 
-export type Rota = 'editor' | 'manual' | 'linguagem'
+export type Rota = 'editor' | 'manual' | 'linguagem' | 'glossario'
 
 /** Toda rota que não é o editor. O editor é o que sobra. */
-const PAGINAS: readonly string[] = ['manual', 'linguagem']
+const PAGINAS: readonly string[] = ['manual', 'linguagem', 'glossario']
 
 function rotaAtual(): Rota {
   const hash = window.location.hash.replace(/^#\/?/, '')

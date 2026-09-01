@@ -48,6 +48,9 @@ import { TargetNode, type TargetNodeType } from './TargetNode.tsx'
 import { TriggerNode, type TriggerNodeType } from './TriggerNode.tsx'
 import './LogicCanvas.css'
 
+/** Preferência de painel recolhido, por navegador. */
+const EXPLICACAO_CHAVE = 'ratflow.explicacaoRegras'
+
 /**
  * Etiqueta de uma faixa: diz onde uma regra começa. Sem ela, duas regras
  * grandes empilhadas viram um borrão só — e o número casa com a lista "O que
@@ -146,6 +149,18 @@ export function LogicCanvas({
     [profile, program, stateSet],
   )
   const narrator = useMemo(() => createNarrator(program, profile), [program, profile])
+
+  // A explicação recolhe. Ela e o painel de código do app disputam o mesmo
+  // lado direito da tela, e com os dois abertos não sobra canvas. A escolha
+  // mora no `localStorage` porque o `LogicCanvas` é remontado (via `key`) a
+  // cada estado aberto — um `useState` sozinho voltaria a abrir toda vez.
+  const [explicacaoPreferida, setExplicacaoPreferida] = useState(
+    () => localStorage.getItem(EXPLICACAO_CHAVE) !== 'fechada',
+  )
+  const alternarExplicacao = (abrir: boolean) => {
+    setExplicacaoPreferida(abrir)
+    localStorage.setItem(EXPLICACAO_CHAVE, abrir ? 'aberta' : 'fechada')
+  }
 
   const doTexto = useMemo(
     () => state.statements.map((statement) => ({ statement, ...decompileStatement(statement) })),
@@ -483,6 +498,12 @@ export function LogicCanvas({
 
   const pendencias = rascunho ? validateGraph(rascunho.graph) : []
 
+  // Uma regra que ainda não fecha só existe na tela: esconder esse aviso seria
+  // esconder a única pista de que o arquivo não mudou. Enquanto houver
+  // pendência, o painel fica aberto mesmo que a preferência diga o contrário.
+  const precisaAtencao = pendencias.length > 0 || !!motivo
+  const explicacaoAberta = explicacaoPreferida || precisaAtencao
+
   return (
     <div className="logic-canvas">
       <div
@@ -510,7 +531,40 @@ export function LogicCanvas({
           <Controls showInteractive={false} />
         </ReactFlow>
       </div>
-      <aside className="logic-canvas-code">
+      {!explicacaoAberta && (
+        <aside className="logic-canvas-code logic-canvas-code--fechada">
+          <button
+            type="button"
+            className="logic-canvas-alternar"
+            title="Mostrar a explicação das regras"
+            aria-label="Mostrar a explicação das regras"
+            aria-expanded={false}
+            onClick={() => alternarExplicacao(true)}
+          >
+            ◂
+          </button>
+        </aside>
+      )}
+
+      <aside className="logic-canvas-code" hidden={!explicacaoAberta}>
+        <div className="logic-canvas-code-topo">
+          <button
+            type="button"
+            className="logic-canvas-alternar"
+            title={
+              precisaAtencao
+                ? 'Fica aberto enquanto houver regra por terminar'
+                : 'Recolher a explicação'
+            }
+            aria-label="Recolher a explicação das regras"
+            aria-expanded
+            disabled={precisaAtencao}
+            onClick={() => alternarExplicacao(false)}
+          >
+            ▸
+          </button>
+        </div>
+
         {(pendencias.length > 0 || motivo) && (
           <section className="logic-canvas-pendencias">
             <h3>Falta terminar</h3>

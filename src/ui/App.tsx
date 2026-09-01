@@ -271,22 +271,40 @@ export function App() {
     setActiveStateSet(index)
   }
 
-  // Espelhamento canvas → código: selecionar um estado ou uma regra revela
-  // o trecho correspondente no editor (abrindo-o se estiver escondido).
-  const revealAndShowCode = useCallback((span: readonly [number, number]) => {
-    setSidePanel('code')
-    codeEditorRef.current?.revealSpan(span)
+  // Espelhamento canvas → código: selecionar um estado ou uma regra marca o
+  // trecho correspondente no editor. **Não abre o painel** — clicar num nó do
+  // canvas é navegação, não um pedido para ver código, e abrir meia tela a
+  // cada clique era mais atrapalho do que ajuda. O trecho escolhido fica
+  // guardado e é revelado quando (e se) o painel for aberto.
+  const spanPendente = useRef<readonly [number, number] | null>(null)
+
+  // Num ref, e não numa dependência do `useCallback`: `handleSelectState` entra
+  // no `useMemo` que monta os nós do React Flow, e trocá-lo remonta o grafo
+  // inteiro (ver o comentário grande de `applyToText`).
+  const sidePanelRef = useRef(sidePanel)
+  sidePanelRef.current = sidePanel
+
+  const revealCode = useCallback((span: readonly [number, number]) => {
+    spanPendente.current = span
+    if (sidePanelRef.current === 'code') codeEditorRef.current?.revealSpan(span)
   }, [])
+
+  useEffect(() => {
+    if (sidePanel === 'code' && spanPendente.current) {
+      codeEditorRef.current?.revealSpan(spanPendente.current)
+    }
+  }, [sidePanel])
+
   const handleSelectState = useCallback(
     (stateIndex: number) => {
       const alvo = stateSet && findState(stateSet, stateIndex)
-      if (alvo) revealAndShowCode(alvo.span)
+      if (alvo) revealCode(alvo.span)
     },
-    [stateSet, revealAndShowCode],
+    [stateSet, revealCode],
   )
   const handleSelectStatement = (statementIndex: number) => {
     const statement = state?.statements[statementIndex]
-    if (statement) revealAndShowCode(statement.span)
+    if (statement) revealCode(statement.span)
   }
 
   const resetNavigation = () => {
@@ -515,10 +533,7 @@ export function App() {
         onProtocolSheet={() => setShowProtocolSheet(true)}
         onManual={() => irPara('manual')}
         onLinguagem={() => irPara('linguagem')}
-        onGlossary={() => {
-          setGlossaryFocus(null)
-          setShowGlossary(true)
-        }}
+        onGlossary={() => irPara('glossario')}
         onTour={() => setTourStep(0)}
       />
 

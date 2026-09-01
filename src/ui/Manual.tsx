@@ -79,7 +79,7 @@ export function Manual({ titulo, secoes }: ManualProps) {
         </header>
 
         <div className="manual-corpo">
-          <nav className="manual-sumario" aria-label="Seções do manual">
+          <nav className="manual-sumario" aria-label="Seções desta página">
             {secoes.map((secao) => (
               <a
                 key={secao.id}
@@ -90,7 +90,7 @@ export function Manual({ titulo, secoes }: ManualProps) {
                   secaoRefs.current[secao.id]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                 }}
               >
-                <span aria-hidden="true">{secao.icone}</span>
+                {secao.icone && <span aria-hidden="true">{secao.icone}</span>}
                 {secao.titulo}
               </a>
             ))}
@@ -106,7 +106,8 @@ export function Manual({ titulo, secoes }: ManualProps) {
                 }}
               >
                 <h3>
-                  <span aria-hidden="true">{secao.icone}</span> {secao.titulo}
+                  {secao.icone && <span aria-hidden="true">{secao.icone} </span>}
+                  {secao.titulo}
                 </h3>
                 {secao.blocos.map((bloco, i) => (
                   <Bloco key={i} bloco={bloco} />

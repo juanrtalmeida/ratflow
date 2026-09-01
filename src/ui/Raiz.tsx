@@ -1,4 +1,5 @@
 import { App } from './App.tsx'
+import { GLOSSARIO } from './glossario-conteudo.ts'
 import { LINGUAGEM } from './linguagem-conteudo.ts'
 import { Manual } from './Manual.tsx'
 import { MANUAL } from './manual-conteudo.ts'
@@ -19,6 +20,7 @@ export function Raiz() {
       <App />
       {rota === 'manual' && <Manual titulo="Manual do RatFlow" secoes={MANUAL} />}
       {rota === 'linguagem' && <Manual titulo="A linguagem MED-PC" secoes={LINGUAGEM} />}
+      {rota === 'glossario' && <Manual titulo="Glossário" secoes={GLOSSARIO} />}
     </>
   )
 }

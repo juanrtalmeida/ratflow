@@ -142,6 +142,46 @@ describe('snippets', () => {
     expect(labels).not.toContain('#START:')
   })
 
+  it('oferece a família def… no começo de uma linha', () => {
+    const labels = completarBruto('  ', true).options.map((o) => o.label)
+
+    expect(labels).toContain('defstate')
+    expect(labels).toContain('defname')
+    expect(labels).toContain('defprocess')
+    expect(labels).toContain('defif')
+    expect(labels).toContain('defpulse')
+    expect(labels).toContain('defclock')
+  })
+
+  it('no meio de uma linha só oferece os atalhos de anotação', () => {
+    // O lugar natural de um `\@nome:` é o fim do cabeçalho de um estado; uma
+    // estrutura inteira ali dentro não faria sentido.
+    const { labels } = completar('S9, def')
+
+    expect(labels).toContain('defname')
+    expect(labels).toContain('defpapel')
+    expect(labels).toContain('defpos')
+    expect(labels).not.toContain('defstate')
+    expect(labels).not.toContain('defclock')
+  })
+
+  it('não repete rótulo entre os atalhos oferecidos juntos', () => {
+    const labels = completarBruto('  ', true).options.map((o) => o.label)
+    expect(new Set(labels).size).toBe(labels.length)
+  })
+
+  it('todo atalho def… escreve código de verdade', () => {
+    const defs = completarBruto('  ', true).options.filter((o) => o.label.startsWith('def'))
+
+    // Uma dúzia de atalhos, não dois — se a lista encolher, alguém apagou
+    // metade da família sem perceber.
+    expect(defs.length).toBeGreaterThan(10)
+    for (const def of defs) {
+      expect(typeof def.apply, def.label).toBe('function')
+      expect(def.detail, def.label).toBeTruthy()
+    }
+  })
+
   it('os snippets aplicam texto, não só o rótulo', () => {
     const { options } = completarBruto('  ', true)
     const processo = options.find((o) => o.label === 'S.S.')!

@@ -22,14 +22,16 @@ Nomes amigáveis não vivem num banco à parte: são gravados no próprio arquiv
 MedState (`^Constante` para dispositivos, `VAR_ALIAS` para contadores, comentários `\@nome:` para
 estados). O `.MPC` continua legível no Bloco de Notas.
 
-O próprio app traz duas páginas de documentação, em ☰ → Ajuda, servidas pelo mesmo componente
+O próprio app traz três páginas de documentação, em ☰ → Ajuda, servidas pelo mesmo componente
 (`src/ui/Manual.tsx`) a partir de conteúdo em forma de dados:
 
 - **Manual** (`#/manual`, `src/ui/manual-conteudo.ts`) — a ferramenta: o que existe, como usar, os
   atalhos e os limites conhecidos;
 - **A linguagem MED-PC** (`#/linguagem`, `src/ui/linguagem-conteudo.ts`) — a linguagem: como um
   programa MedState roda, a sintaxe com exemplo de cada uso, os padrões dos arquivos de laboratório
-  e as armadilhas comuns.
+  e as armadilhas comuns;
+- **Glossário** (`#/glossario`, `src/ui/glossario-conteudo.ts`) — o vocabulário, projetado dos
+  mesmos termos de `glossary-terms.ts` que o balãozinho "?" mostra dentro do editor.
 
 ## Desenvolvimento
 

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { GLOSSARIO } from './glossario-conteudo.ts'
 import { LINGUAGEM } from './linguagem-conteudo.ts'
 import { MANUAL, type ManualSecao } from './manual-conteudo.ts'
 
@@ -9,6 +10,7 @@ import { MANUAL, type ManualSecao } from './manual-conteudo.ts'
 const PAGINAS: readonly { nome: string; secoes: readonly ManualSecao[] }[] = [
   { nome: 'manual', secoes: MANUAL },
   { nome: 'linguagem', secoes: LINGUAGEM },
+  { nome: 'glossario', secoes: GLOSSARIO },
 ]
 
 /** Todo texto de uma página, de qualquer tipo de bloco, com um rótulo para o erro. */
@@ -47,7 +49,8 @@ describe.each(PAGINAS)('conteúdo da página $nome', ({ secoes }) => {
     expect(new Set(ids).size).toBe(ids.length)
     for (const secao of secoes) {
       expect(secao.blocos.length, secao.id).toBeGreaterThan(0)
-      expect(secao.icone, secao.id).not.toBe('')
+      // O ícone é opcional (o glossário não usa), mas string vazia é engano.
+      if (secao.icone !== undefined) expect(secao.icone, secao.id).not.toBe('')
     }
   })
 

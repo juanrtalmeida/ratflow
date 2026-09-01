@@ -25,7 +25,8 @@ export type ManualBloco =
 
 export interface ManualSecao {
   readonly id: string
-  readonly icone: string
+  /** Opcional: o glossário é uma lista de termos, e um mesmo ícone repetido 13 vezes só faz ruído. */
+  readonly icone?: string
   readonly titulo: string
   readonly blocos: readonly ManualBloco[]
 }
@@ -63,6 +64,42 @@ export const MANUAL: readonly ManualSecao[] = [
         texto:
           'Tudo roda no navegador, offline, sem servidor. O que está na tela é salvo ' +
           'automaticamente no navegador; ir para o disco é sempre uma ação sua.',
+      },
+    ],
+  },
+
+  {
+    id: 'documentacao',
+    icone: '📚',
+    titulo: 'Onde está a documentação',
+    blocos: [
+      {
+        kind: 'texto',
+        texto: 'São três páginas, todas no menu ☰ → Ajuda, e todas com URL própria:',
+      },
+      {
+        kind: 'tabela',
+        cabecalho: ['Página', 'Responde'],
+        linhas: [
+          [
+            '**Manual** (esta)',
+            'Onde clicar. O que cada painel faz, o que o editor sabe escrever, quais os limites conhecidos.',
+          ],
+          [
+            '**A linguagem MED-PC**',
+            'O que o equipamento executa. Como um programa MedState roda, a sintaxe com exemplo de cada uso, os padrões dos arquivos de laboratório e as armadilhas comuns.',
+          ],
+          [
+            '**Glossário**',
+            'O que uma palavra quer dizer. Os termos de laboratório e de MedState em uma ou duas frases. São os mesmos textos do balãozinho "?" que aparece pelas telas do app.',
+          ],
+        ],
+      },
+      {
+        kind: 'texto',
+        texto:
+          'As três abrem por cima do editor, sem desmontá-lo: voltar (`Esc` ou "← Voltar ao editor") ' +
+          'devolve a tela exatamente como estava, sem perder edição nenhuma.',
       },
     ],
   },
@@ -318,7 +355,7 @@ export const MANUAL: readonly ManualSecao[] = [
         itens: [
           'Mexer no canvas muda o texto na hora; digitar no texto redesenha o canvas.',
           'O **desfazer é um só** para os dois: um arrasto no canvas e uma tecla no código entram na mesma pilha.',
-          'Clicar num nó ou numa regra revela e seleciona o trecho no código.',
+          'Clicar num nó ou numa regra marca o trecho no código — sem abrir o painel. Quando você abrir o `código`, ele já vem selecionado e rolado até ali.',
           'Mover o cursor no código destaca o estado e a regra correspondentes no canvas.',
         ],
       },
@@ -346,8 +383,8 @@ export const MANUAL: readonly ManualSecao[] = [
           ['Depois de `^`', 'As constantes que o arquivo já tem.'],
           ['Depois de `@`', 'Os rótulos de decisão do arquivo.'],
           ['Depois de `--->`', 'Os estados existentes, e `SX` (ficar aqui).'],
-          ['Palavra no meio de uma linha', 'Comandos do MedState, com explicação.'],
-          ['Começo de uma linha', 'Estruturas prontas: processo, estado, `VAR_ALIAS`, regras completas.'],
+          ['Palavra no meio de uma linha', 'Comandos do MedState, com explicação, e os atalhos de anotação (`defname`, `defpapel`, `defpos`).'],
+          ['Começo de uma linha', 'Os atalhos `def…`, as estruturas prontas (processo, estado, `VAR_ALIAS`), regras completas e os comandos.'],
           ['`#` no começo de uma linha', 'Regras prontas com gatilho, e os gatilhos sozinhos.'],
           ['Dentro de um comentário', 'As anotações do editor: `\\@nome:`, `\\@papel:`, `\\@pos:`.'],
         ],
@@ -358,6 +395,47 @@ export const MANUAL: readonly ManualSecao[] = [
           'Nos **snippets**, `Tab` salta entre os campos a preencher e `Shift-Tab` volta. Campos ' +
           'com o mesmo nome andam juntos: no snippet de decisão, renomear `@Sim` no `IF` renomeia ' +
           'o segmento correspondente no mesmo gesto.',
+      },
+      {
+        kind: 'texto',
+        texto:
+          '**Os atalhos `def…`.** Digitar `def` numa linha abre a lista inteira do que o editor sabe ' +
+          'escrever — é o caminho para quem não tem a sintaxe do MedState na cabeça. Cada um escreve ' +
+          'o trecho já com os campos marcados; `Tab` anda entre eles.',
+      },
+      {
+        kind: 'tabela',
+        cabecalho: ['Atalho', 'Escreve'],
+        linhas: [
+          ['`defstate`', 'Cabeçalho de estado com nome e papel: `Sn, \\@nome: … \\@papel: …`'],
+          ['`defname`', 'Só a anotação de nome: `\\@nome: …` — cabe no fim de um cabeçalho já escrito.'],
+          ['`defpapel`', 'Só a anotação de papel: `\\@papel: …` (`espera`, `reforco`, `timeout`, `fim`).'],
+          ['`defpos`', 'Só a posição no canvas: `\\@pos: x,y`.'],
+          ['`defprocess`', 'Um processo novo (`S.S.n`) com o primeiro estado e o `#START`.'],
+          ['`defalias`', 'O bloco `VAR_ALIAS … END`.'],
+          ['`defconst`', 'Uma constante: `^Nome = valor`.'],
+          ['`defdim`', 'Um array: `DIM B = 19`.'],
+          ['`deflist`', 'Uma `LIST` de valores para sortear.'],
+          ['`defdisk`', 'A diretiva `DISKVARS`.'],
+          ['`defstart`', 'A regra `#START:` que zera contadores e segue.'],
+          ['`defresp`', 'Contar uma resposta: `#R^Porta: ADD A ---> SX`.'],
+          ['`deftimer`', 'Esperar e sair: `N": ---> Sn`.'],
+          ['`defif`', 'Uma decisão com os dois ramos já escritos.'],
+          ['`defsignal` / `defsend`', 'Receber (`#Zn:`) e emitir (`Zn`) um sinal entre processos.'],
+          ['`defshow`', 'Mostrar um valor no painel: `SHOW posição, rótulo, valor`.'],
+          ['`defrand`', 'Sortear de uma lista: `RANDD C = Intervalos`.'],
+          ['`defpulse`', 'O par de estados que liga e desliga um dispositivo por um tempo exato.'],
+          ['`defcount`', 'O contador de razão fixa: conta, testa a meta, zera.'],
+          ['`defiti`', 'O intervalo entre tentativas: apaga a luz, espera, acende.'],
+          ['`defclock`', 'O processo do relógio da sessão, com critério de parada.'],
+          ['`defbox`', 'O processo de teste de caixa, que confere a fiação antes da sessão.'],
+        ],
+      },
+      {
+        kind: 'nota',
+        texto:
+          'Os atalhos são só a porta de entrada: o que cada um escreve, e por que se escreve assim, ' +
+          'está explicado em **A linguagem MED-PC** (☰ → Ajuda), na seção **Padrões da linguagem**.',
       },
     ],
   },

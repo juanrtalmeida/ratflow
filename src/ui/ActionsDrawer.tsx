@@ -132,7 +132,7 @@ export function ActionsDrawer({
             📘 A linguagem MED-PC — sintaxe e padrões
           </button>
           <button type="button" onClick={run(onGlossary)}>
-            ❓ Glossário
+            ❓ Glossário — termos do laboratório
           </button>
           <button type="button" onClick={run(onTour)}>
             🎓 Tour de primeiros passos

@@ -3,13 +3,73 @@
   overflow: hidden;
 }
 
+/* O CodeMirror traz um tema claro fixo (fundo branco, calha #f5f5f5, linha
+   ativa azul) que não segue `prefers-color-scheme` — no tema escuro do app o
+   editor ficava uma placa branca, e no claro a calha destoava do resto dos
+   painéis. Aqui a moldura inteira passa a usar os tokens do app; as cores dos
+   *tokens* do MedState já vinham deles (ver `medstate-highlight.ts`).
+
+   Os seletores levam `.code-editor .cm-editor` na frente de propósito: o tema
+   da biblioteca tem a mesma especificidade de duas classes, e empatar
+   dependeria da ordem em que as folhas entram no `<head>`. */
 .code-editor .cm-editor {
   height: 100%;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.code-editor .cm-editor.cm-focused {
+  outline: none;
 }
 
 .code-editor .cm-scroller {
   font-family: var(--mono);
   overflow: auto;
+}
+
+.code-editor .cm-editor .cm-gutters {
+  background: var(--bg-panel);
+  color: var(--text-muted);
+  border-right: 1px solid var(--border);
+}
+
+.code-editor .cm-editor .cm-activeLineGutter {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+/* Um degrau de superfície, não uma cor de destaque: a linha ativa acompanha o
+   cursor o tempo todo e uma faixa forte cansa. */
+.code-editor .cm-editor .cm-activeLine {
+  background: var(--bg-panel);
+}
+
+.code-editor .cm-editor .cm-cursor,
+.code-editor .cm-editor .cm-dropCursor {
+  border-left-color: var(--accent);
+}
+
+.code-editor .cm-editor .cm-selectionBackground,
+.code-editor .cm-editor .cm-content ::selection {
+  background: var(--accent-bg);
+}
+
+/* Painel de busca (Ctrl+F) e seus campos. */
+.code-editor .cm-editor .cm-panels {
+  background: var(--bg-panel);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.code-editor .cm-editor .cm-panels input,
+.code-editor .cm-editor .cm-panels button {
+  font: inherit;
+  font-size: 12px;
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
 }
 
 /* Popover de ajuda ao passar o mouse num comando (medstate-hover.ts). O

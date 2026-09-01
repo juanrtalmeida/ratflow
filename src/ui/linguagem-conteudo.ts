@@ -1051,8 +1051,9 @@ S4,
         kind: 'texto',
         texto:
           'Para saber onde clicar, o que cada painel faz e quais os limites do editor, veja o ' +
-          '**Manual do RatFlow** (menu ☰ → Ajuda → Manual). Esta página é sobre a linguagem; aquela é ' +
-          'sobre a ferramenta.',
+          '**Manual do RatFlow**; para o significado de um termo solto, o **Glossário** (os dois no ' +
+          'menu ☰ → Ajuda). Esta página é sobre a linguagem; aquelas são sobre a ferramenta e sobre ' +
+          'o vocabulário.',
       },
     ],
   },

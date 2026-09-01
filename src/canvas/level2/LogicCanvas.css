@@ -21,6 +21,40 @@
   font-size: 13px;
 }
 
+/* Recolhido: só a aba de reabrir, como faz a paleta do outro lado. */
+.logic-canvas-code--fechada {
+  width: auto;
+  padding: 8px 4px;
+}
+
+.logic-canvas-code-topo {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 4px;
+}
+
+.logic-canvas-alternar {
+  flex: none;
+  padding: 2px 5px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text-muted);
+  font: inherit;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.logic-canvas-alternar:hover:not(:disabled) {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+.logic-canvas-alternar:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 .logic-canvas-code h3 {
   margin: 0 0 8px;
   font-size: 12px;
