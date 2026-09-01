@@ -58,6 +58,12 @@ export interface ExportOptions {
   readonly corFundo?: string
 }
 
+/**
+ * O rodapé do card é interface — "Abrir lógica", renomear, excluir. Aparece na
+ * tela, não na figura que vai para o caderno ou para o artigo.
+ */
+const semControles = (el: HTMLElement) => !el.classList?.contains('state-node-rodape')
+
 export async function exportarCanvasPng<NodeType extends Node, EdgeType extends Edge>(
   instance: ReactFlowInstance<NodeType, EdgeType>,
   container: HTMLElement,
@@ -72,6 +78,7 @@ export async function exportarCanvasPng<NodeType extends Node, EdgeType extends 
     width,
     height,
     pixelRatio: escala,
+    filter: semControles,
     backgroundColor: opcoes.corFundo ?? '#ffffff',
     style: { width: `${width}px`, height: `${height}px`, transform },
   })
@@ -90,6 +97,7 @@ export async function exportarCanvasSvg<NodeType extends Node, EdgeType extends 
   const dataUrl = await toSvg(viewport, {
     width,
     height,
+    filter: semControles,
     backgroundColor: opcoes.corFundo ?? '#ffffff',
     style: { width: `${width}px`, height: `${height}px`, transform },
   })

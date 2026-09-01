@@ -36,7 +36,7 @@ export interface ProtocolCanvasProps {
   readonly diagnostics?: readonly Diagnostic[]
   /** Chamado quando um estado é solto em nova posição — persiste como `\@pos:`. */
   readonly onMoveState?: (stateIndex: number, pos: { x: number; y: number }) => void
-  /** Duplo clique num estado: abre o nível 2 (lógica em nós). */
+  /** Abre o nível 2 (lógica em nós): botão do nó, duplo clique ou Enter. */
   readonly onOpenState?: (stateIndex: number) => void
   /** Duplo clique no vazio do canvas, ou bloco da paleta solto ali: cria um estado. */
   readonly onCreateState?: (pos: { x: number; y: number }, papel?: string) => void
@@ -99,6 +99,7 @@ export const ProtocolCanvas = forwardRef<ProtocolCanvasHandle, ProtocolCanvasPro
         position: n.position,
         data: {
           ...n.data,
+          onOpen: (i: number) => onOpenState?.(i),
           onRename: (i: number) => onRenameState?.(i),
           onDelete: (i: number) => onDeleteState?.(i),
           highlighted: n.data.stateIndex === highlightedState,
@@ -106,7 +107,7 @@ export const ProtocolCanvas = forwardRef<ProtocolCanvasHandle, ProtocolCanvasPro
         },
       })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [graph, onRenameState, onDeleteState, highlightedState, activeState],
+    [graph, onOpenState, onRenameState, onDeleteState, highlightedState, activeState],
   )
   const initialEdges = useMemo<TransitionEdgeType[]>(
     () =>
@@ -219,6 +220,23 @@ export const ProtocolCanvas = forwardRef<ProtocolCanvasHandle, ProtocolCanvasPro
     return false
   }
 
+  /**
+   * Enter no estado em foco abre a lógica dele — o mesmo que o botão do nó e o
+   * duplo clique. No `div` do canvas e não na janela: só dispara com o foco
+   * aqui dentro, e não rouba o Enter do editor de código nem de um campo.
+   */
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key !== 'Enter' || event.defaultPrevented) return
+    const alvo = event.target as HTMLElement | null
+    if (alvo?.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(alvo?.tagName ?? '')) {
+      return
+    }
+    const selecionados = nodes.filter((n) => n.selected)
+    if (selecionados.length !== 1) return
+    event.preventDefault()
+    onOpenState?.(Number(selecionados[0]!.id))
+  }
+
   const handlePaneDoubleClick = (event: React.MouseEvent) => {
     if (!onCreateState || !rfInstance.current) return
     const target = event.target as HTMLElement
@@ -232,6 +250,7 @@ export const ProtocolCanvas = forwardRef<ProtocolCanvasHandle, ProtocolCanvasPro
       className="protocol-canvas"
       ref={containerRef}
       onDoubleClick={handlePaneDoubleClick}
+      onKeyDown={handleKeyDown}
       onDragOver={handleDragOver}
       onDragLeave={() => setFioAlvo(null)}
       onDrop={handleDrop}

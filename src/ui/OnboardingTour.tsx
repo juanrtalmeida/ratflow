@@ -33,8 +33,8 @@ export const TOUR_STEPS: readonly TourStepInfo[] = [
   {
     titulo: 'Você reforçou uma resposta! 🎉',
     texto:
-      'Um gatilho, uma regra, um destino — é assim que todo esquema funciona por baixo. Duplo ' +
-      'clique num estado do canvas abre a lógica em nós; o resto é vocabulário novo.',
+      'Um gatilho, uma regra, um destino — é assim que todo esquema funciona por baixo. O botão ' +
+      '"Abrir lógica" no card de um estado mostra isso em nós; o resto é vocabulário novo.',
     acao: 'Concluir',
   },
 ]

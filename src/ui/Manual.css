@@ -23,31 +23,115 @@
   overflow: hidden;
 }
 
+/* ---- Cabeçalho: sair, e trocar de guia ---------------------------------- */
+
 .manual-header {
   display: flex;
-  align-items: baseline;
-  gap: 16px;
-  padding: 14px 28px;
+  align-items: center;
+  gap: 20px;
+  padding: 10px 28px;
   border-bottom: 1px solid var(--border);
   flex: none;
 }
 
-.manual-header h1 {
-  margin: 0;
-  font-size: 16px;
-  color: var(--text-h);
-}
-
 .manual-voltar {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   flex: none;
-  font-size: 13px;
-  color: var(--accent);
-  text-decoration: none;
+  padding: 5px 11px 5px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  font-size: 12.5px;
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s,
+    background 0.15s;
 }
 
 .manual-voltar:hover {
-  text-decoration: underline;
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+  color: var(--accent);
 }
+
+.manual-voltar kbd {
+  font: 500 10.5px/1.6 var(--sans);
+  letter-spacing: 0.04em;
+  padding: 0 5px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-panel);
+  color: var(--text-muted);
+}
+
+/* Controle segmentado: os três guias sempre visíveis, o de agora em relevo.
+   Uma aba escondida atrás de um menu não é troca rápida. */
+.manual-abas {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-panel);
+}
+
+.manual-aba {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--text-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+
+.manual-aba:hover {
+  color: var(--text-h);
+}
+
+.manual-aba--ativa {
+  background: var(--bg);
+  color: var(--text-h);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---- Identidade do guia ------------------------------------------------- */
+
+.manual-titulo {
+  flex: none;
+  padding: 26px 28px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.manual-titulo h1 {
+  margin: 0 0 5px;
+  font-size: 25px;
+  font-weight: 650;
+  letter-spacing: -0.5px;
+  color: var(--text-h);
+}
+
+.manual-titulo p {
+  margin: 0;
+  max-width: 82ch;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+/* ---- Sumário ------------------------------------------------------------ */
 
 .manual-corpo {
   flex: 1;
@@ -57,30 +141,71 @@
 
 .manual-sumario {
   flex: none;
-  width: 264px;
+  width: 288px;
   overflow-y: auto;
-  padding: 10px 8px 20px;
+  padding: 18px 14px 32px;
   border-right: 1px solid var(--border);
   background: var(--bg-panel);
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
+}
+
+.manual-sumario-topo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 10px 10px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.manual-sumario-contagem {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--accent);
 }
 
 .manual-sumario-item {
+  position: relative;
   display: flex;
   align-items: baseline;
-  gap: 8px;
-  padding: 6px 9px;
+  gap: 10px;
+  padding: 7px 10px 7px 12px;
   border-radius: var(--radius-sm);
   font-size: 13px;
+  line-height: 1.4;
   color: var(--text);
   text-decoration: none;
+  transition:
+    background 0.12s,
+    color 0.12s;
+}
+
+/* Barra de posição: fina e cinza no repouso, cheia e da cor de ação na seção
+   que está sendo lida — dá a indicação sem depender só do peso da fonte. */
+.manual-sumario-item::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 0;
+  border-radius: 2px;
+  background: var(--accent);
+  transition: height 0.18s ease;
 }
 
 .manual-sumario-item:hover {
   background: var(--accent-bg);
-  color: var(--accent);
+  color: var(--text-h);
 }
 
 .manual-sumario-item--ativa {
@@ -90,13 +215,35 @@
   box-shadow: var(--shadow-sm);
 }
 
+.manual-sumario-item--ativa::before {
+  height: calc(100% - 12px);
+}
+
+.manual-sumario-num {
+  flex: none;
+  width: 1.6em;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.manual-sumario-item--ativa .manual-sumario-num {
+  color: var(--accent);
+}
+
+.manual-sumario-rotulo {
+  min-width: 0;
+}
+
+/* ---- Texto -------------------------------------------------------------- */
+
 .manual-texto {
   flex: 1;
   min-width: 0;
   overflow-y: auto;
-  padding: 4px 40px 72px;
-  font-size: 14.5px;
-  line-height: 1.65;
+  padding: 0 48px 96px;
+  font-size: 15px;
+  line-height: 1.72;
   color: var(--text);
 }
 
@@ -105,94 +252,215 @@
 .manual-texto p,
 .manual-texto ul,
 .manual-texto ol {
-  max-width: 78ch;
+  max-width: 74ch;
 }
 
 .manual-texto section {
   /* Espaço para o cabeçalho não colar no topo quando o sumário rola até ele. */
-  padding-top: 24px;
+  padding-top: 40px;
 }
 
-.manual-texto h3 {
-  margin: 0 0 10px;
-  font-size: 17px;
+.manual-texto section + section {
+  margin-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* Selo da seção: diz em que guia e em que parte dele o olho está, sem obrigar
+   a olhar para a coluna da esquerda. */
+.manual-secao-marca {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.manual-secao-marca span {
+  font-size: 13px;
+  letter-spacing: 0;
+}
+
+.manual-texto h2 {
+  margin: 0 0 14px;
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.3px;
+  line-height: 1.3;
   color: var(--text-h);
 }
 
 .manual-texto p {
-  margin: 0 0 12px;
+  margin: 0 0 14px;
 }
 
 .manual-texto ul,
 .manual-texto ol {
-  margin: 0 0 12px;
-  padding-left: 22px;
+  margin: 0 0 16px;
+  padding-left: 20px;
 }
 
 .manual-texto li {
-  margin-bottom: 5px;
+  margin-bottom: 7px;
+  padding-left: 3px;
+}
+
+.manual-texto li::marker {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .manual-texto strong {
   color: var(--text-h);
+  font-weight: 600;
 }
 
 .manual-texto code {
   font-family: var(--mono);
   font-size: 12.5px;
   background: var(--code-bg);
-  border-radius: 3px;
-  padding: 1px 4px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
   color: var(--text-h);
+  white-space: nowrap;
 }
 
 /* Tabela larga rola dentro de si mesma — a página nunca rola na horizontal. */
 .manual-tabela-rolagem {
   overflow-x: auto;
-  margin: 0 0 14px;
+  margin: 0 0 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }
 
 .manual-texto table {
   border-collapse: collapse;
   width: 100%;
   font-size: 13px;
+  line-height: 1.55;
 }
 
 .manual-texto th,
 .manual-texto td {
-  border: 1px solid var(--border);
-  padding: 6px 9px;
+  padding: 9px 14px;
   text-align: left;
   vertical-align: top;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Só réguas horizontais: a grade cheia de antes fazia mais peso que separação. */
+.manual-texto tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.manual-texto tbody tr:nth-child(even) {
+  background: var(--bg-panel);
 }
 
 .manual-texto th {
+  position: sticky;
+  top: 0;
   background: var(--bg-panel);
   color: var(--text-h);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
 .manual-codigo {
-  margin: 0 0 14px;
-  padding: 10px 12px;
+  margin: 0 0 20px;
+  padding: 14px 16px;
   background: var(--code-bg);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   font-family: var(--mono);
   font-size: 12.5px;
-  line-height: 1.5;
+  line-height: 1.6;
   overflow-x: auto;
   color: var(--text-h);
 }
 
 .manual-nota {
-  padding: 9px 12px;
+  display: flex;
+  gap: 10px;
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
   border-left: 3px solid var(--warn);
   background: var(--bg-panel);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  font-size: 13px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: 13.5px;
+  line-height: 1.6;
 }
 
-@media (max-width: 720px) {
+.manual-nota > span:first-child {
+  flex: none;
+  color: var(--warn);
+}
+
+/* ---- Rodapé: o próximo guia -------------------------------------------- */
+
+.manual-proximo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 74ch;
+  margin-top: 48px;
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-panel);
+  text-decoration: none;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.manual-proximo:hover {
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+}
+
+.manual-proximo-rotulo {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.manual-proximo-titulo {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.manual-proximo:hover .manual-proximo-titulo {
+  color: var(--accent);
+}
+
+@media (max-width: 900px) {
+  .manual-header,
+  .manual-titulo {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .manual-header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .manual-abas {
+    overflow-x: auto;
+  }
+
   .manual-corpo {
     flex-direction: column;
   }
@@ -206,11 +474,26 @@
     padding: 8px;
   }
 
+  .manual-sumario-topo {
+    display: none;
+  }
+
   .manual-sumario-item {
     white-space: nowrap;
   }
 
   .manual-texto {
-    padding: 4px 16px 40px;
+    padding: 0 16px 56px;
+    font-size: 14.5px;
+  }
+
+  .manual-titulo h1 {
+    font-size: 21px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .manual-sumario-item::before {
+    transition: none;
   }
 }

@@ -8,6 +8,8 @@ import './StateNode.css'
  * não lá, para não misturar UI com o mapeamento AST → grafo.
  */
 export interface StateNodeData extends ProtocolNodeData {
+  /** Abre o nível 2 — a lógica deste estado. */
+  readonly onOpen: (stateIndex: number) => void
   readonly onRename: (stateIndex: number) => void
   readonly onDelete: (stateIndex: number) => void
   /** O cursor do editor de código está dentro do span deste estado. */
@@ -44,31 +46,48 @@ export function StateNode({ data, selected }: NodeProps<StateNodeType>) {
 
       <p className="state-node-resumo">{data.resumo}</p>
 
-      <div className="state-node-actions">
+      <div className="state-node-rodape">
+        {/* Sempre visível, e não só no hover: abrir a lógica é *a* ação do nó.
+            Escondida atrás de um duplo clique, ninguém a encontrava. */}
         <button
           type="button"
-          className="state-node-action"
-          title="Renomear"
+          className="state-node-abrir"
+          title="Abrir a lógica deste estado (duplo clique ou Enter)"
           onMouseDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation()
-            data.onRename(data.stateIndex)
+            data.onOpen(data.stateIndex)
           }}
         >
-          ✏️
+          Abrir lógica <span aria-hidden="true">›</span>
         </button>
-        <button
-          type="button"
-          className="state-node-action"
-          title="Excluir"
-          onMouseDown={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation()
-            data.onDelete(data.stateIndex)
-          }}
-        >
-          🗑
-        </button>
+
+        <span className="state-node-actions">
+          <button
+            type="button"
+            className="state-node-action"
+            title="Renomear"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation()
+              data.onRename(data.stateIndex)
+            }}
+          >
+            ✏️
+          </button>
+          <button
+            type="button"
+            className="state-node-action"
+            title="Excluir"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation()
+              data.onDelete(data.stateIndex)
+            }}
+          >
+            🗑
+          </button>
+        </span>
       </div>
 
       {data.severity && (

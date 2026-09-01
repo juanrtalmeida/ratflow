@@ -14,11 +14,51 @@ import { useEffect, useState } from 'react'
 export type Rota = 'editor' | 'manual' | 'linguagem' | 'glossario'
 
 /** Toda rota que não é o editor. O editor é o que sobra. */
-const PAGINAS: readonly string[] = ['manual', 'linguagem', 'glossario']
+export type RotaGuia = Exclude<Rota, 'editor'>
+
+export interface Guia {
+  readonly rota: RotaGuia
+  /** Rótulo curto: é o que cabe na aba de troca rápida. */
+  readonly rotulo: string
+  readonly icone: string
+  /** Vai no `<h1>` e no título da aba do navegador. */
+  readonly titulo: string
+  /** Uma linha dizendo a que este guia responde — some a dúvida "é neste?". */
+  readonly descricao: string
+}
+
+/**
+ * Os três guias, em ordem de leitura. É esta lista que desenha as abas de
+ * troca rápida, o rodapé "próximo guia" e os atalhos `1`–`3`: acrescentar um
+ * guia aqui basta para ele aparecer nos três lugares.
+ */
+export const GUIAS: readonly Guia[] = [
+  {
+    rota: 'manual',
+    rotulo: 'Manual',
+    icone: '🧭',
+    titulo: 'Manual do RatFlow',
+    descricao: 'A ferramenta: o que existe na tela, como usar, atalhos e limites conhecidos.',
+  },
+  {
+    rota: 'linguagem',
+    rotulo: 'Linguagem',
+    icone: '📐',
+    titulo: 'A linguagem MED-PC',
+    descricao: 'A linguagem: como um programa MedState roda, a sintaxe, os padrões e as armadilhas.',
+  },
+  {
+    rota: 'glossario',
+    rotulo: 'Glossário',
+    icone: '📖',
+    titulo: 'Glossário',
+    descricao: 'O vocabulário: os mesmos termos que o balãozinho "?" mostra dentro do editor.',
+  },
+]
 
 function rotaAtual(): Rota {
   const hash = window.location.hash.replace(/^#\/?/, '')
-  return PAGINAS.includes(hash) ? (hash as Rota) : 'editor'
+  return GUIAS.some((g) => g.rota === hash) ? (hash as Rota) : 'editor'
 }
 
 export function useRota(): Rota {

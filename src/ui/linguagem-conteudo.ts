@@ -1035,7 +1035,7 @@ S4,
         kind: 'texto',
         texto:
           'O RatFlow lê o `.MPC` e desenha a máquina de estados: cada estado vira um nó, cada `--->` ' +
-          'vira uma seta, e o duplo clique num estado abre as regras dele como um grafo de gatilhos, ' +
+          'vira uma seta, e "Abrir lógica" num estado mostra as regras dele como um grafo de gatilhos, ' +
           'ações, decisões e destinos. Editar o desenho reescreve o texto — e só o pedaço de texto ' +
           'que mudou.',
       },

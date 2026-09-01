@@ -168,7 +168,8 @@ export const MANUAL: readonly ManualSecao[] = [
           ['Soltar um bloco **sobre uma seta**', 'Insere o estado no meio daquela transição, já ligado dos dois lados.'],
           ['Puxar da bolinha direita até outro nó', 'Cria uma transição nova.'],
           ['Arrastar a ponta de uma seta', 'Religa a transição para outro destino.'],
-          ['Duplo clique num nó', 'Abre a lógica daquele estado (nível 2).'],
+          ['**Abrir lógica** no card', 'Abre a lógica daquele estado (nível 2).'],
+          ['Duplo clique num nó, ou `Enter` no nó selecionado', 'O mesmo: abre a lógica dele.'],
           ['Clique simples num nó', 'Revela o trecho correspondente no editor de código.'],
           ['✏️ no card', 'Renomeia o estado.'],
           ['🗑 no card, ou Delete', 'Exclui o estado.'],
@@ -206,7 +207,8 @@ export const MANUAL: readonly ManualSecao[] = [
       {
         kind: 'texto',
         texto:
-          'Duplo clique num estado abre o grafo da lógica dele. Cada **regra** (uma linha de ' +
+          'O botão **Abrir lógica** no card do estado — ou um duplo clique nele, ou `Enter` com ' +
+          'ele selecionado — abre o grafo da lógica dele. Cada **regra** (uma linha de ' +
           'transição do MedState) é uma faixa horizontal, com quatro tipos de bloco:',
       },
       {
@@ -558,6 +560,7 @@ export const MANUAL: readonly ManualSecao[] = [
           ['`Ctrl`+`Z` / `Ctrl`+`Shift`+`Z`', 'em todo o app', 'Desfazer e refazer, canvas e código juntos.'],
           ['`Delete` ou `Backspace`', 'canvas', 'Apaga o nó ou a seta selecionada.'],
           ['duplo clique', 'canvas', 'No vazio, cria estado; num nó, abre a lógica dele.'],
+          ['`Enter`', 'canvas', 'Abre a lógica do estado selecionado (nível 2).'],
           ['`Ctrl`+`Espaço`', 'editor de código', 'Abre o autocomplete e os snippets.'],
           ['`Tab` / `Shift`+`Tab`', 'num snippet', 'Anda entre os campos a preencher.'],
           ['`Esc`', 'editor de código', 'Fecha o autocomplete ou solta os campos do snippet.'],

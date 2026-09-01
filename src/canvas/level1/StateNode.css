@@ -1,7 +1,9 @@
 .state-node {
   position: relative;
+  display: flex;
+  flex-direction: column;
   width: 220px;
-  min-height: 96px;
+  min-height: 104px;
   padding: 10px 12px;
   border-radius: var(--radius);
   border: 1.5px solid var(--border-strong);
@@ -77,15 +79,46 @@
 
 .state-node-resumo {
   margin: 0;
+  flex: 1;
   color: var(--text-muted);
   font-size: 12px;
   line-height: 1.35;
 }
 
+.state-node-rodape {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+/* A porta para o nível 2, escrita por extenso e sempre na tela. Cor de ação e
+   borda de botão: o duplo clique continua funcionando, mas não é mais a única
+   forma de descobrir que existe uma lógica por trás do estado. */
+.state-node-abrir {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+  background: var(--accent-bg);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  transition:
+    background 0.12s,
+    color 0.12s;
+}
+
+.state-node-abrir:hover {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
 .state-node-actions {
-  position: absolute;
-  bottom: 4px;
-  right: 6px;
   display: flex;
   gap: 2px;
   opacity: 0;
@@ -93,7 +126,8 @@
 }
 
 .state-node:hover .state-node-actions,
-.state-node--selected .state-node-actions {
+.state-node--selected .state-node-actions,
+.state-node-actions:focus-within {
   opacity: 1;
 }
 
